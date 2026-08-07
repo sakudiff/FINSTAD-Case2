@@ -1,0 +1,31 @@
+# R / RStudio
+.Rhistory
+.Rapp.history
+.RData
+.Ruserdata
+.Rproj.user/
+*.Rproj
+
+# knitr / R Markdown output
+*_cache/
+*_files/
+*.knit.md
+*.utf8.md
+
+# Data files (track selectively)
+*.RData
+*.rds
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+
+# Rendered output (keep source, not compiled)
+*.log
+*.aux
+*.out
+*.synctex.gz
