@@ -4,6 +4,31 @@ subtitle: "FINSTAD Case 2 -- Group 3 (Charlie)"
 author: "Group 3: Ricardo Cruz, Enrique Galedo, Josiah Seballos, Camille Seechung, Aaron Sison"
 date: "August 17, 2026"
 format:
+  pdf:
+    pdf-engine: pdflatex
+    toc: true
+    toc-depth: 3
+    number-sections: true
+    colorlinks: true
+    documentclass: article
+    papersize: letter
+    geometry:
+      - margin=1in
+    header-includes:
+      - \usepackage{fvextra}
+      - \DefineVerbatimEnvironment{Highlighting}{Highlighting}{breaklines,commandchars=\\\{\}}
+      - \usepackage{microtype}
+      - \usepackage{adjustbox}
+      - \usepackage{booktabs}
+      - \usepackage{tabularx}
+      - \usepackage{pdflscape}
+      - \usepackage{float}
+      - \usepackage{ragged2e}
+      - \usepackage{csquotes}
+      - \clubpenalty=10000
+      - \widowpenalty=10000
+      - \displaywidowpenalty=10000
+      - \sloppy
   html:
     theme: cosmo
     toc: true
@@ -14,13 +39,14 @@ format:
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk_set(
+knitr::opts_chunk$set(
   echo = TRUE,
   warning = FALSE,
   message = FALSE,
-  fig.width = 9,
-  fig.height = 5,
-  dpi = 300
+  fig.width = 8,
+  fig.height = 4.8,
+  dpi = 300,
+  fig.pos = "H"
 )
 ```
 
@@ -43,7 +69,6 @@ library(PortfolioAnalytics)
 # Solvers for portfolio optimization
 library(ROI)
 library(ROI.plugin.quadprog)
-library(ROI.plugin.glpk)
 
 # Table formatting and visual aesthetics
 library(corrplot)
@@ -86,7 +111,7 @@ prices_df <- raw_data %>%
 asset_cols <- c("TEL", "MER", "AEV", "NVDA", "META", "BTC", "SPY")
 
 # Convert to xts object for quantitative analysis
-prices_xts <- xts(prices_df[, asset_cols], order.by = prices_df$Date)
+prices_xts <- xts(prices_df[, asset_cols], order.by = prices_df[["Date"]])
 
 # Compute daily log returns
 returns_xts <- Return.calculate(prices_xts, method = "log")[-1, ]
@@ -99,7 +124,7 @@ asset_returns_xts <- returns_xts[, portfolio_assets]
 benchmark_returns_xts <- returns_xts[, benchmark_asset]
 
 # Risk-free rate (annualized PH 91-Day T-Bill average rate converted to daily rate)
-rf_annual <- mean(prices_df$RF_Rate, na.rm = TRUE)
+rf_annual <- mean(prices_df[["RF_Rate"]], na.rm = TRUE)
 rf_daily <- (1 + rf_annual)^(1/252) - 1
 
 cat("Dataset span:", format(min(index(returns_xts))), "to", format(max(index(returns_xts))), "\n")
