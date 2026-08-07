@@ -18,16 +18,16 @@ Group 3 Charlie evaluates the following seven asset classes over the sample peri
 
 ## Team Roles and Responsibility Matrix
 
-| Report Section / Task | Assigned Team Member | Status |
-| --- | --- | --- |
-| Data Acquisition and Preparation | Aaron | Completed |
-| Exploratory Financial Analysis | Aaron and Enrique | In Progress |
-| Portfolio Construction and Evaluation | Team | Scheduled |
-| Portfolio Optimization | Aaron | Scheduled |
-| Portfolio Risk Assessment | Team | Scheduled |
-| Executive Investment Recommendation | Iñigo | Scheduled |
-| Introduction | Iñigo | Scheduled |
-| Executive Presentation | Team | Scheduled |
+| Report Section / Task | Assigned Team Member | Status | Output Files |
+| --- | --- | --- | --- |
+| Data Acquisition and Preparation | Aaron | Completed | `chapters/02_data_acquisition.tex`, `tbl_data_summary.tex` |
+| Exploratory Data Analysis (EDA) | Aaron and Enrique | Completed | `chapters/03_exploratory_data_analysis.tex`, `tbl_desc_stats.tex`, `tbl_correlation.tex`, 6 vector plots |
+| Portfolio Construction and Evaluation | Aaron | Completed | `chapters/04_portfolio_construction.tex`, `fig-portfolio-growth-1.pdf`, `fig-rebalanced-weights-1.pdf` |
+| Portfolio Optimization | Aaron | In Progress | `reports/finstad_analysis.qmd` |
+| Portfolio Risk Assessment | Team | Scheduled | TBD |
+| Executive Investment Recommendation | Iñigo | Scheduled | TBD |
+| Introduction | Iñigo | Scheduled | TBD |
+| Executive Presentation | Team | Scheduled | TBD |
 
 ## Workspace Directory Layout
 
