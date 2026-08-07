@@ -1,20 +1,24 @@
 \section{Exploratory Financial Analysis}
 
-This section presents empirical descriptive statistics, distributional shape diagnostics, return dispersion comparisons, and correlation structures across the asset universe over the 2020 through 2025 sampling period.
+Exploratory financial analysis establishes the empirical foundation required to construct robust portfolio optimization algorithms and risk management frameworks. This section provides an exhaustive evaluation of central tendency, volatility dynamics, distributional shape, tail risk diagnostics, and pairwise asset return co-movements across the 1,508 daily log return observations spanning 2020 through 2025.
 
-\subsection{Descriptive Statistical Summary}
+\subsection{Empirical Descriptive Statistics and Risk Return Profiles}
 
-Table~\ref{tab:desc_stats} provides the summary statistics computed from daily log returns across all portfolio assets and the benchmark index.
+Table~\ref{tab:desc_stats} summarizes the foundational descriptive statistics computed from the daily log return series across all seven portfolio assets.
 
 \input{tables/tbl_desc_stats.tex}
 
-The descriptive results highlight clear risk-return trade-offs. International technology equities and cryptocurrency delivered higher average daily log returns, accompanied by substantially elevated volatility. Bitcoin (BTC) exhibited the highest daily standard deviation, followed by NVIDIA (NVDA) and Meta Platforms (META). Conversely, Philippine equities (TEL, MER, AEV) demonstrated lower volatility profiles, functioning as defensive anchors within the portfolio.
+The empirical results reveal pronounced divergence in expected return and risk parameters across asset classes. NVIDIA Corporation (NVDA) generated the highest average daily log return at 0.0023, translating to an annualized return exceeding 57.9 percent. Bitcoin (BTC) followed with a daily log return mean of 0.0017, representing an annualized performance of 42.8 percent. Meta Platforms (META) and the benchmark SPDR S\&P 500 ETF Trust (SPY) recorded moderate positive daily return averages of 0.0008 and 0.0006 respectively. Domestic Philippine equities displayed subdued central tendencies, with Manila Electric Company (MER) producing 0.0005 daily and PLDT Inc. (TEL) generating 0.0003 daily. Aboitiz Equity Ventures (AEV) stood as the sole asset with a negative daily mean return of -0.0005 over the six year window.
 
-All asset return distributions exhibit excess kurtosis (kurtosis greater than 3.0), indicating leptokurtic behavior characterized by fat tails and heightened frequency of extreme market movements relative to a normal distribution.
+Daily volatility metrics highlight severe dispersion in asset risk exposure. Bitcoin exhibited the highest daily standard deviation of 0.0393, representing an annualized volatility of 62.4 percent. NVIDIA recorded daily volatility of 0.0333, while Meta Platforms and Aboitiz Equity Ventures both registered daily standard deviations of 0.0279. Domestic utility equities PLDT and Manila Electric demonstrated defensive stability with lower daily standard deviations of 0.0199 and 0.0193 respectively. The benchmark SPY displayed the lowest daily return volatility across the universe at 0.0131, reflecting the structural risk reduction achieved through broad market diversification.
 
-\subsection{Historical Return Dynamics and Volatility Clustering}
+Third and fourth statistical moments demonstrate severe departure from Gaussian normality across all assets. Skewness measures reveal substantial left tail risk for Aboitiz Equity Ventures at -3.3581, PLDT at -1.7687, Bitcoin at -1.2226, and Meta Platforms at -1.0731. These negative skewness values confirm that extreme negative drawdowns occur with greater magnitude than positive price surges. Conversely, Manila Electric Company produced a positive skewness of 2.0662, reflecting infrequent but substantial upward price re-rating jumps. NVIDIA exhibited near zero skewness at 0.0434, indicating balanced directional return dispersion despite high total volatility.
 
-Figure~\ref{fig:ts_returns} depicts the daily log return trajectories across the sample period.
+Kurtosis metrics provide decisive evidence of fat tailed leptokurtosis across the entire asset universe. Theoretical Gaussian normal distributions possess a standard kurtosis of 3.0. Aboitiz Equity Ventures recorded an extreme kurtosis value of 109.4985, driven by catastrophic single day price declines during emerging market sell-offs. Manila Electric Company registered a kurtosis of 83.2401, while PLDT recorded 31.4844. Meta Platforms, Bitcoin, and SPY demonstrated elevated kurtosis values of 22.0943, 16.2966, and 13.3999 respectively. Even NVIDIA, the least leptokurtic asset in the universe, recorded a kurtosis of 4.0565. These excess kurtosis figures prove that asset returns contain heavy tail shocks that render standard mean variance models inadequate without explicit fat tail risk adjustments.
+
+\subsection{Historical Return Trajectories and Volatility Clustering}
+
+Figure~\ref{fig:ts_returns} illustrates the historical daily log return series for each asset across the 2020 through 2025 sampling period.
 
 \begin{figure}[H]
   \centering
@@ -23,11 +27,13 @@ Figure~\ref{fig:ts_returns} depicts the daily log return trajectories across the
   \label{fig:ts_returns}
 \end{figure}
 
-The time-series plots demonstrate distinct volatility clustering, where periods of high volatility are followed by high volatility. The market wide impact of the March 2020 pandemic onset is visible across all equities, followed by sector specific drawdowns during global monetary tightening in 2022.
+The time series return trajectories exhibit prominent autoregressive conditional heteroskedasticity, commonly known as volatility clustering. Large return shocks of either sign are systematically followed by large return shocks, while tranquil periods persist in distinct temporal bands. The March 2020 systemic liquidity shock triggered synchronized daily return spikes exceeding 10 to 20 percent in magnitude across US equities, cryptocurrency, and domestic Philippine assets.
+
+Sector specific volatility regimes emerged throughout subsequent years. The 2022 global monetary tightening cycle produced sustained return dispersion in Meta Platforms and NVIDIA, characterized by sharp single day drawdowns following quarterly earnings announcements. Bitcoin experienced severe structural shocks during the 2022 digital asset market deleveraging, with daily return oscillations exceeding 15 percent. Philippine domestic equities displayed isolated volatility bursts corresponding to local macroeconomic policy shifts and corporate restructuring announcements, operating largely independently of global tech sector turbulence.
 
 \subsection{Distributional Shape and Non-Normality Diagnostics}
 
-Figure~\ref{fig:density_hist} compares empirical kernel density estimates against theoretical Gaussian normal distribution curves fitted to each asset's mean and variance.
+Figure~\ref{fig:density_hist} compares the empirical kernel density distributions of daily log returns against fitted Gaussian normal distribution curves.
 
 \begin{figure}[H]
   \centering
@@ -36,7 +42,9 @@ Figure~\ref{fig:density_hist} compares empirical kernel density estimates agains
   \label{fig:density_hist}
 \end{figure}
 
-The empirical densities feature sharp central peaks and extended, heavy tails. Figure~\ref{fig:qq_plots} provides normal Quantile-Quantile (Q-Q) plots, which further substantiate heavy tail departure from Gaussian normality through pronounced S-shaped curvature at both extremes.
+The empirical density overlays highlight two distinct structural departures from classical normal distributions. First, the central peaks of the empirical distributions rise significantly higher than theoretical normal curves, demonstrating a high concentration of small daily price movements around the median. Second, the shoulders of the empirical distributions collapse faster than normal curves, while the extreme tails extend much farther outward. This structural shape confirms that asset returns experience long periods of low volatility punctuated by sudden, severe market shocks.
+
+Figure~\ref{fig:qq_plots} provides normal Quantile-Quantile (Q-Q) diagnostic plots to evaluate tail behavior against theoretical Gaussian quantiles.
 
 \begin{figure}[H]
   \centering
@@ -45,9 +53,11 @@ The empirical densities feature sharp central peaks and extended, heavy tails. F
   \label{fig:qq_plots}
 \end{figure}
 
-\subsection{Return Dispersion and Outlier Structure}
+The normal Q-Q plots display pronounced S-shaped departures from the red dashed 45-degree theoretical reference line across every single asset. In the lower left quadrant, sample quantiles curve sharply downward below the theoretical line, confirming that negative market drawdowns are vastly larger than predicted by normal distribution assumptions. In the upper right quadrant, sample quantiles curve upward above the theoretical line, reflecting severe upside price spikes. The severity of tail curvature is most extreme for Aboitiz Equity Ventures, Manila Electric Company, and Bitcoin, proving that risk models assuming Gaussian normality will severely underestimate tail risk and Value at Risk thresholds.
 
-Figure~\ref{fig:boxplots} presents cross-asset return dispersion boxplots, highlighting medians, interquartile ranges, and extreme daily outliers.
+\subsection{Return Dispersion and Extreme Outlier Comparison}
+
+Figure~\ref{fig:boxplots} presents cross-asset return dispersion boxplots, illustrating median values, interquartile ranges (IQR), and extreme tail outliers across the universe.
 
 \begin{figure}[H]
   \centering
@@ -56,11 +66,13 @@ Figure~\ref{fig:boxplots} presents cross-asset return dispersion boxplots, highl
   \label{fig:boxplots}
 \end{figure}
 
-Bitcoin and technology equities display wide interquartile ranges and long outlier tails. Domestic Philippine equities display compact interquartile ranges, illustrating greater short term return stability.
+The boxplot visualizer highlights distinct structural groupings in asset return dispersion. The SPDR S\&P 500 ETF Trust (SPY) displays the most compact interquartile box and the shortest outlier whiskers, reflecting the risk dampening effects of index diversification. Domestic Philippine equities (TEL, MER, AEV) exhibit narrow interquartile ranges bounded between -0.0100 and +0.0100 daily log returns, but display extreme individual outlier points reaching -0.4724 for AEV and +0.2868 for MER.
+
+International growth assets display broad interquartile boxes, reflecting higher baseline uncertainty. Bitcoin (BTC) features the widest interquartile range from -0.0160 to +0.0203 daily, accompanied by extreme lower tail outliers extending to -0.4647. NVIDIA (NVDA) and Meta Platforms (META) display wide interquartile ranges with asymmetric outlier dots extending beyond -0.3000 during severe earnings shock events. These dispersion characteristics indicate that while domestic equities offer day to day stability, international technology and crypto assets require active risk management to mitigate severe tail event exposure.
 
 \subsection{Cumulative Wealth Growth Trajectories}
 
-Figure~\ref{fig:cum_returns} shows the cumulative wealth growth of a hypothetical USD 1.00 investment from January 2020 through December 2025 on a logarithmic scale.
+Figure~\ref{fig:cum_returns} shows the cumulative wealth growth index of a hypothetical USD 1.00 investment from January 2020 through December 2025 on a logarithmic scale.
 
 \begin{figure}[H]
   \centering
@@ -69,11 +81,13 @@ Figure~\ref{fig:cum_returns} shows the cumulative wealth growth of a hypothetica
   \label{fig:cum_returns}
 \end{figure}
 
-International technology equities and Bitcoin achieved strong multi year capital appreciation despite experiencing severe drawdown phases during 2022.
+The logarithmic cumulative performance plot illustrates massive long term return divergence across the asset universe over the six year holding period. NVIDIA Corporation generated the most extraordinary capital appreciation, compounding a USD 1.00 initial investment into over USD 10.00 by late 2025, driven by the global expansion of artificial intelligence infrastructure demand. Bitcoin achieved substantial cumulative growth, rising from USD 1.00 to over USD 6.00 despite experiencing severe drawdowns of over 60 percent during the 2022 crypto winter.
 
-\subsection{Asset Return Correlation Structure}
+Meta Platforms and the benchmark SPY achieved steady cumulative appreciation, growing to approximately USD 2.20 and USD 1.95 respectively. Domestic Philippine equities delivered mixed long term performance. Manila Electric Company achieved modest cumulative growth to USD 1.45, while PLDT maintained capital preservation around USD 1.10. Aboitiz Equity Ventures experienced structural headwinds, ending the six year period below its initial capital baseline at approximately USD 0.65. This cumulative performance divergence demonstrates that high volatility assets can generate substantial long term alpha when combined effectively with defensive risk stabilizing assets.
 
-Table~\ref{tab:correlation} presents the pairwise correlation matrix across the asset universe, while Figure~\ref{fig:correlation_heatmap} displays the correlation heatmap.
+\subsection{Asset Return Correlation Structure and Diversification Potential}
+
+Table~\ref{tab:correlation} presents the complete pairwise return correlation matrix across the asset universe, while Figure~\ref{fig:correlation_heatmap} displays the visual correlation heatmap.
 
 \input{tables/tbl_correlation.tex}
 
@@ -84,4 +98,8 @@ Table~\ref{tab:correlation} presents the pairwise correlation matrix across the 
   \label{fig:correlation_heatmap}
 \end{figure}
 
-The correlation matrix reveals low pairwise linear correlation between Philippine domestic stocks (TEL, MER, AEV) and US technology equities (NVDA, META) or Bitcoin. This low cross-market correlation provides a strong quantitative foundation for international portfolio diversification.
+The empirical correlation structure reveals exceptional diversification opportunities across geographic regions and asset classes. International US equities demonstrate strong intra-market co-movement, with NVIDIA and Meta Platforms exhibiting a pairwise correlation of +0.5331. Both tech equities show high positive correlation with the benchmark SPY, recording +0.7052 for NVIDIA and +0.6284 for Meta Platforms. Bitcoin displays moderate positive correlation with US equities, recording +0.3880 with SPY, +0.3205 with NVIDIA, and +0.2435 with Meta Platforms, reflecting increasing integration between digital assets and macro liquidity conditions.
+
+Crucially, domestic Philippine equities exhibit near zero or negative pairwise correlations with international technology assets and Bitcoin. Manila Electric Company displays correlations of -0.0371 with NVIDIA, -0.0273 with Meta Platforms, -0.0014 with Bitcoin, and -0.0093 with SPY. Aboitiz Equity Ventures exhibits negative correlations of -0.0562 with NVIDIA, -0.0307 with Meta Platforms, -0.0098 with Bitcoin, and -0.0815 with SPY. PLDT demonstrates slight negative correlations with domestic peers MER (-0.0368) and AEV (-0.0379), while maintaining modest correlation of +0.3010 with SPY due to its primary NYSE depositary receipt listing.
+
+These near zero and negative cross market correlation coefficients provide compelling quantitative justification for constructing a combined domestic and international multi asset portfolio. Combining high return, high volatility international tech assets with uncorrelated domestic Philippine equities enables substantial portfolio variance reduction without sacrificing long term expected return.

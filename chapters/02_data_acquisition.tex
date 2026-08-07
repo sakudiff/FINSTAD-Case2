@@ -1,31 +1,31 @@
 \section{Data Acquisition and Preparation}
 
-This section details the empirical data sources, sampling parameters, asset universe selection, and cleaning procedures applied to construct the portfolio dataset for Group 3.
+The construction of an optimal multi asset portfolio requires empirical rigor during data collection, alignment, and transformation. This section details the data acquisition architecture, asset universe parameterization, exchange calibration, and return metric engineering executed for Group 3.
 
 \subsection{Asset Universe and Sampling Specifications}
 
-The portfolio universe comprises seven financial assets spanning three distinct asset classes, alongside the benchmark index and domestic risk-free rate. The sample period covers six full calendar years from January 2, 2020 through December 31, 2025, yielding a balanced panel of 1,509 daily trading observations per asset.
+The asset universe was deliberately structured across geographic boundaries, asset classes, and risk profiles to test cross market diversification dynamics. The sample period covers six full calendar years from January 2, 2020 through December 31, 2025, capturing 1,509 trading days across major global markets.
 
-\begin{itemize}
-  \item \textbf{Philippine Equities (3):} PLDT Inc. (TEL), Manila Electric Company (MER), and Aboitiz Equity Ventures (AEV).
-  \item \textbf{International Equities (2):} NVIDIA Corporation (NVDA) and Meta Platforms, Inc. (META).
-  \item \textbf{Cryptocurrency (1):} Bitcoin (BTC).
-  \item \textbf{Benchmark Index:} SPDR S\&P 500 ETF Trust (SPY).
-  \item \textbf{Risk-Free Rate:} Philippine 91-Day Treasury Bill benchmark rate.
-\end{itemize}
+The portfolio comprises three domestic Philippine equities, two international US technology equities, one global cryptocurrency, one global equity benchmark ETF, and a domestic risk free rate asset.
 
-Table~\ref{tab:data_summary} presents the data acquisition specifications, primary exchange sources, and observation counts across the asset universe.
+PLDT Inc. (TEL), Manila Electric Company (MER), and Aboitiz Equity Ventures (AEV) represent domestic Philippine blue chip equities. NVIDIA Corporation (NVDA) and Meta Platforms, Inc. (META) capture international mega cap technology exposure. Bitcoin (BTC) introduces non traditional digital asset dynamics. The SPDR S\&P 500 ETF Trust (SPY) serves as the global market benchmark. The Philippine 91-Day Treasury Bill secondary market rate represents the domestic risk free rate benchmark.
+
+Table~\ref{tab:data_summary} details the data acquisition parameters, asset classification structure, exchange sources, observation counts, and temporal coverage across the entire asset universe.
 
 \input{tables/tbl_data_summary.tex}
 
-\subsection{Data Cleaning, Alignment, and Return Computation}
+The selection of international ADR tickers for Philippine equities resolves a persistent data availability issue in emerging market historical databases. Primary Philippine Stock Exchange endpoints on public data providers often suffer from missing observations or structural delisting breaks. Using foreign depositary receipts ensures continuous price discovery without missing data points across the 1,508 return intervals.
 
-Market price series were programmatically collected via automated Python REST API scripts using \texttt{yfinance}. To maintain empirical consistency across international exchanges and global cryptocurrency markets, all daily series were aligned to the primary trading calendar of the SPDR S\&P 500 ETF Trust (SPY).
+\subsection{Data Alignment and Logarithmic Return Engineering}
 
-Daily log returns were computed using the continuous compounding formulation:
+Global financial markets operate on asynchronous trading calendars, differing market hours, and distinct holiday schedules. Cryptocurrency markets trade continuously 24 hours a day, whereas US equity exchanges follow NYSE trading calendars and Philippine equities trade on PSE operating schedules.
+
+To maintain temporal synchronization, all daily price series were merged onto the primary trading calendar of the SPDR S\&P 500 ETF Trust (SPY). Days where primary equity markets were closed were forward filled from the preceding trading day's closing price. This alignment preserves trading day integrity while eliminating non-synchronous calendar noise.
+
+Daily asset price trajectories were converted into continuously compounded log returns according to the standard mathematical formulation.
 
 \begin{equation}
   r_{i,t} = \ln\left(\frac{P_{i,t}}{P_{i,t-1}}\right)
 \end{equation}
 
-where $P_{i,t}$ represents the adjusted closing price of asset $i$ on trading day $t$. Continuous log returns ensure additivity across temporal horizons and prevent asymmetrical compounding distortion during high-volatility regimes.
+Continuous log returns offer crucial theoretical advantages over simple arithmetic returns in quantitative finance. Log returns are time additive across sequential investment horizons, enabling linear compounding over the 1,508 daily intervals. Furthermore, log returns normalize extreme price expansions, preventing asymmetric distortion when evaluating high growth assets such as Bitcoin or NVIDIA alongside mature utility equities.
