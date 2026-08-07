@@ -1,0 +1,58 @@
+\section{Portfolio Construction and Strategy Evaluation}
+
+Portfolio construction transforms individual asset return dynamics into integrated asset allocation strategies. This section evaluates the empirical performance of equal weighted multi asset portfolios under two distinct execution regimes, comparing an un-rebalanced Buy-and-Hold strategy against a disciplined Monthly Rebalanced strategy. Both strategies start with an equal allocation vector across the six asset universe on January 2, 2020 and are benchmarked against the SPDR S\&P 500 ETF Trust (SPY).
+
+\subsection{Comparative Strategy Performance Evaluation}
+
+Table~\ref{tab:portfolio_performance} presents the cumulative returns, annualized return (CAGR), annualized volatility, Sharpe ratios, and maximum drawdowns across both execution strategies and the SPY benchmark.
+
+\begin{table}[H]
+\centering
+\caption{\label{tab:portfolio_performance}Portfolio Performance Summary Comparison (2020--2025)}
+\centering
+\resizebox{\ifdim\width>\linewidth\linewidth\else\width\fi}{!}{
+\fontsize{8}{10}\selectfont
+\begin{tabular}[t]{lrrrrr}
+\toprule
+Strategy & Cumulative Return & CAGR (Annualized) & Annual Volatility & Sharpe Ratio (Rf=5.25\%) & Max Drawdown\\
+\midrule
+Equal-Weight (Buy \& Hold) & 401.41\% & 24.35\% & 31.96\% & 0.5977 & -61.56\%\\
+Equal-Weight (Monthly Rebalanced) & 227.20\% & 18.66\% & 23.16\% & 0.5790 & -49.21\%\\
+SPDR S\&P 500 ETF (SPY Benchmark) & 129.48\% & 12.42\% & 20.79\% & 0.3448 & -35.75\%\\
+\bottomrule
+\end{tabular}}
+\end{table}
+
+The performance comparison demonstrates strong alpha generation relative to the SPY benchmark across both multi asset portfolio configurations. The static Buy-and-Hold strategy achieved the highest cumulative return of 401.41 percent, representing an annualized growth rate of 24.35 percent. This outperformance was driven by unconstrained weight compounding in mega-performance growth assets, specifically NVIDIA and Bitcoin. However, this un-rebalanced growth came at the expense of elevated portfolio risk, as annual volatility expanded to 31.96 percent and the maximum drawdown reached 61.56 percent during the 2022 market decline.
+
+Disciplined monthly rebalancing altered the risk return trade-off substantially. The Monthly Rebalanced portfolio delivered a cumulative return of 227.20 percent and an annualized return of 18.66 percent. While monthly rebalancing trimmed CAGR by 5.69 percentage points compared to Buy-and-Hold, it achieved a massive 8.80 percentage point reduction in annual volatility down to 23.16 percent. Furthermore, monthly rebalancing curtailed maximum drawdown by 12.35 percentage points down to 49.21 percent, producing a highly stable Sharpe ratio of 0.5790 compared to 0.3448 for the benchmark SPY.
+
+\subsection{Cumulative Wealth Growth Dynamics}
+
+Figure~\ref{fig:portfolio_growth} compares the cumulative wealth growth trajectories of a USD 1.00 initial allocation across the two portfolio strategies and the benchmark SPY on a logarithmic scale.
+
+\begin{figure}[H]
+  \centering
+  \safeincludegraphics[width=\textwidth]{figures/fig-portfolio-growth-1.pdf}
+  \caption{Cumulative Wealth Growth Comparison (Log Scale)}
+  \label{fig:portfolio_growth}
+\end{figure}
+
+The growth trajectories highlight the distinct behavior of the strategies during major market regimes. During the post COVID-19 bull market of 2020 through 2021, the Buy-and-Hold trajectory detached rapidly from the Monthly Rebalanced portfolio, propelled by explosive price appreciation in Bitcoin and NVIDIA. However, during the 2022 global monetary tightening cycle, the Buy-and-Hold portfolio experienced a steep, unmitigated decline, surrendering substantial gains as concentrated equity and crypto positions collapsed simultaneously.
+
+In contrast, the Monthly Rebalanced portfolio displayed remarkable resilience during the 2022 downturn. By systematically taking profits from outperforming tech and crypto assets during monthly rebalancing dates, the portfolio built a cash buffer reallocated into defensive Philippine equities (TEL, MER, AEV). This systematic profit taking mitigated portfolio downside, allowing the Monthly Rebalanced strategy to resume steady compounding throughout the 2023 to 2025 recovery phase with significantly smoother trajectory pathing.
+
+\subsection{Asset Weight Drift and Allocation Evolution}
+
+Figure~\ref{fig:rebalanced-weights} displays the evolution of asset weight shares over time in the un-rebalanced Buy-and-Hold portfolio.
+
+\begin{figure}[H]
+  \centering
+  \safeincludegraphics[width=\textwidth]{figures/fig-rebalanced-weights-1.pdf}
+  \caption{Asset Weight Drift Over Time in the Un-Rebalanced Buy-and-Hold Portfolio}
+  \label{fig:rebalanced-weights}
+\end{figure}
+
+The weight drift visualizer exposes the core vulnerability of un-rebalanced portfolio execution. On January 2, 2020, each asset held an equal weight share of 16.67 percent. By late 2024 and 2025, differential performance completely distorted the allocation structure. NVIDIA Corporation and Bitcoin expanded rapidly, capturing over 70 percent of total portfolio weight. Concurrently, defensive Philippine equities were diluted to minimal percentage shares despite maintaining stable operational fundamentals.
+
+This weight concentration transformed the un-rebalanced Buy-and-Hold portfolio from a diversified multi asset allocation into a concentrated tech and cryptocurrency bet. Monthly rebalancing restores the original 16.67 percent allocation target on the first trading day of every month, enforcing anti-cyclical disciplined trading by selling high-performing assets and buying underperforming defensive assets.

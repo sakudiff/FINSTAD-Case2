@@ -404,10 +404,150 @@ corrplot(
 )
 ```
 
-# Portfolio Construction (Equal-Weight vs Rebalanced)
+# Portfolio Construction (Equal-Weight vs Monthly Rebalanced)
 
-```{r portfolio-construction}
-# Placeholder for Portfolio Construction logic
+This section evaluates the performance of equal-weighted asset allocations under two distinct execution regimes: a static Buy-and-Hold strategy and a disciplined Monthly Rebalanced strategy. The 6-asset portfolio universe (TEL, MER, AEV, NVDA, META, BTC) starts with equal baseline weights ($w_i = 1/6 \approx 16.67\%$) on January 2, 2020 and is benchmarked against the SPDR S&P 500 ETF Trust (SPY).
+
+```{r portfolio-construction-calc}
+# Equal weight allocation vector across the 6 portfolio assets
+w_eq <- rep(1 / 6, 6)
+names(w_eq) <- colnames(asset_returns_xts)
+
+# Strategy 1: Buy-and-Hold Equal-Weighted Portfolio
+port_bnh <- Return.portfolio(
+  R = asset_returns_xts,
+  weights = w_eq,
+  verbose = TRUE
+)
+r_bnh <- port_bnh$returns
+weights_bnh <- port_bnh$EOP.Weight
+
+# Strategy 2: Monthly Rebalanced Equal-Weighted Portfolio
+port_reb <- Return.portfolio(
+  R = asset_returns_xts,
+  weights = w_eq,
+  rebalance_on = "months",
+  verbose = TRUE
+)
+r_reb <- port_reb$returns
+weights_reb <- port_reb$EOP.Weight
+
+# Risk-free rate metrics (5.25% per annum)
+rf_annual <- 0.0525
+rf_daily <- log(1 + rf_annual) / 252
+
+# Performance evaluation helper function
+eval_portfolio <- function(r_series, name) {
+  cum_ret <- exp(sum(r_series)) - 1
+  ann_ret <- as.numeric(Return.annualized(r_series, geometric = TRUE))
+  ann_sd  <- as.numeric(StdDev.annualized(r_series))
+  sharpe  <- (ann_ret - rf_annual) / ann_sd
+  max_dd  <- as.numeric(maxDrawdown(r_series))
+  
+  data.frame(
+    Strategy = name,
+    `Cumulative Return` = sprintf("%.2f%%", cum_ret * 100),
+    `CAGR (Annualized)` = sprintf("%.2f%%", ann_ret * 100),
+    `Annual Volatility` = sprintf("%.2f%%", ann_sd * 100),
+    `Sharpe Ratio (Rf=5.25%)` = sprintf("%.4f", sharpe),
+    `Max Drawdown` = sprintf("%.2f%%", max_dd * 100),
+    check.names = FALSE
+  )
+}
+
+perf_summary_df <- rbind(
+  eval_portfolio(r_bnh, "Equal-Weight (Buy & Hold)"),
+  eval_portfolio(r_reb, "Equal-Weight (Monthly Rebalanced)"),
+  eval_portfolio(returns_xts[, "SPY"], "SPDR S&P 500 ETF (SPY Benchmark)")
+)
+```
+
+## Comparative Performance Evaluation
+
+```{r}
+#| label: tbl-portfolio-performance
+#| tbl-cap: "Portfolio Performance Summary Comparison (2020--2025)"
+
+safe_kable(perf_summary_df, caption = "Portfolio Performance Summary Comparison (2020--2025)")
+```
+
+## Cumulative Portfolio Growth Comparison
+
+```{r}
+#| label: fig-portfolio-growth
+#| fig.cap: "Cumulative Growth Trajectories of USD 1.00 Investment Across Strategies"
+#| fig.width: 8
+#| fig.height: 5
+
+# Merge portfolio return series
+port_returns_combined <- cbind(r_bnh, r_reb, returns_xts[, "SPY"])
+colnames(port_returns_combined) <- c("Buy_Hold", "Monthly_Rebalanced", "SPY_Benchmark")
+
+# Compute cumulative wealth index
+port_growth_df <- as.data.frame(cumprod(1 + port_returns_combined)) %>%
+  rownames_to_column(var = "Date") %>%
+  mutate(Date = as.Date(Date)) %>%
+  pivot_longer(-Date, names_to = "Strategy", values_to = "Wealth") %>%
+  mutate(
+    Strategy = case_when(
+      Strategy == "Buy_Hold" ~ "Equal-Weight (Buy & Hold)",
+      Strategy == "Monthly_Rebalanced" ~ "Equal-Weight (Monthly Rebalanced)",
+      Strategy == "SPY_Benchmark" ~ "SPDR S&P 500 ETF (SPY)"
+    ),
+    Strategy = factor(
+      Strategy,
+      levels = c("Equal-Weight (Buy & Hold)", "Equal-Weight (Monthly Rebalanced)", "SPDR S&P 500 ETF (SPY)")
+    )
+  )
+
+strat_colors <- c(
+  "Equal-Weight (Buy & Hold)" = "#E3120B",        # Economist Red
+  "Equal-Weight (Monthly Rebalanced)" = "#1F2E7A", # Chicago 30
+  "SPDR S&P 500 ETF (SPY)" = "#595959"            # London 35
+)
+
+ggplot(port_growth_df, aes(x = Date, y = Wealth, color = Strategy, linetype = Strategy)) +
+  geom_line(linewidth = 0.85) +
+  scale_color_manual(values = strat_colors) +
+  scale_linetype_manual(values = c("solid", "solid", "dashed")) +
+  scale_y_log10(labels = label_dollar(prefix = "USD ")) +
+  scale_x_date(date_labels = "%Y", date_breaks = "1 year") +
+  labs(
+    title = "Cumulative Wealth Growth Comparison (Log Scale)",
+    subtitle = "Performance of USD 1.00 allocation from January 2020 through December 2025",
+    x = NULL,
+    y = "Wealth Index (USD)"
+  ) +
+  theme_quant()
+```
+
+## Portfolio Asset Weight Drift Analysis
+
+```{r}
+#| label: fig-rebalanced-weights
+#| fig.cap: "Asset Weight Drift Over Time in the Un-Rebalanced Buy-and-Hold Portfolio"
+#| fig.width: 8
+#| fig.height: 5.2
+
+# Reshape end-of-period weights for Buy & Hold strategy
+weights_bnh_df <- as.data.frame(weights_bnh) %>%
+  rownames_to_column(var = "Date") %>%
+  mutate(Date = as.Date(Date)) %>%
+  pivot_longer(-Date, names_to = "Asset", values_to = "Weight") %>%
+  mutate(Asset = factor(Asset, levels = names(qvrs_colors)))
+
+ggplot(weights_bnh_df, aes(x = Date, y = Weight, fill = Asset)) +
+  geom_area(alpha = 0.85, color = "#FFFFFF", linewidth = 0.1) +
+  scale_fill_manual(values = qvrs_colors) +
+  scale_y_continuous(labels = label_percent(accuracy = 1)) +
+  scale_x_date(date_labels = "%Y", date_breaks = "1 year") +
+  labs(
+    title = "Asset Allocation Drift in Buy-and-Hold Execution",
+    subtitle = "Evolution of asset weights driven by differential market performance (2020--2025)",
+    x = NULL,
+    y = "Portfolio Weight Share"
+  ) +
+  theme_quant()
 ```
 
 # Portfolio Optimization (Efficient Frontier, GMV, Max Sharpe)
