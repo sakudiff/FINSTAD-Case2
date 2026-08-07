@@ -1,0 +1,176 @@
+---
+title: "Portfolio Management and Risk Consultation"
+subtitle: "FINSTAD Case 2 -- Group 3 (Charlie)"
+author: "Group 3: Ricardo Cruz, Enrique Galedo, Josiah Seballos, Camille Seechung, Aaron Sison"
+date: "August 17, 2026"
+format:
+  html:
+    theme: cosmo
+    toc: true
+    toc-depth: 3
+    number-sections: true
+    code-fold: show
+    code-summary: "Show R Code"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk_set(
+  echo = TRUE,
+  warning = FALSE,
+  message = FALSE,
+  fig.width = 9,
+  fig.height = 5,
+  dpi = 300
+)
+```
+
+# Setup and Library Loading
+
+Load the quantitative finance, portfolio analytics, and data visualization libraries required for the analysis.
+
+```{r libraries}
+# Core data manipulation and visualization
+library(tidyverse)
+library(lubridate)
+library(scales)
+
+# Time series and quantitative financial analysis
+library(xts)
+library(zoo)
+library(PerformanceAnalytics)
+library(PortfolioAnalytics)
+
+# Solvers for portfolio optimization
+library(ROI)
+library(ROI.plugin.quadprog)
+library(ROI.plugin.glpk)
+
+# Table formatting and visual aesthetics
+library(corrplot)
+library(knitr)
+library(kableExtra)
+```
+
+# Data Ingestion and Preparation
+
+Load the compiled master dataset containing historical daily close prices for Group 3's asset universe (TEL, MER, AEV, NVDA, META, BTC, SPY) and the risk-free rate benchmark over the sample period (January 2, 2020 -- December 31, 2025).
+
+```{r data-ingestion}
+# Define path to master dataset
+data_path <- file.path("..", "data", "master_dataset.csv")
+
+# Read master dataset
+if (!file.exists(data_path)) {
+  data_path <- file.path("data", "master_dataset.csv")
+}
+
+raw_data <- read_csv(data_path)
+
+# Preview structure
+glimpse(raw_data)
+```
+
+## Daily Log Return Computation
+
+Compute daily log returns for all portfolio assets and the benchmark:
+
+$$r_{i,t} = \ln\left(\frac{P_{i,t}}{P_{i,t-1}}\right)$$
+
+```{r return-computation}
+# Sort by date
+prices_df <- raw_data %>%
+  mutate(Date = as.Date(Date)) %>%
+  arrange(Date)
+
+# Extract asset price columns
+asset_cols <- c("TEL", "MER", "AEV", "NVDA", "META", "BTC", "SPY")
+
+# Convert to xts object for quantitative analysis
+prices_xts <- xts(prices_df[, asset_cols], order.by = prices_df$Date)
+
+# Compute daily log returns
+returns_xts <- Return.calculate(prices_xts, method = "log")[-1, ]
+
+# Separate portfolio assets from benchmark
+portfolio_assets <- c("TEL", "MER", "AEV", "NVDA", "META", "BTC")
+benchmark_asset <- "SPY"
+
+asset_returns_xts <- returns_xts[, portfolio_assets]
+benchmark_returns_xts <- returns_xts[, benchmark_asset]
+
+# Risk-free rate (annualized PH 91-Day T-Bill average rate converted to daily rate)
+rf_annual <- mean(prices_df$RF_Rate, na.rm = TRUE)
+rf_daily <- (1 + rf_annual)^(1/252) - 1
+
+cat("Dataset span:", format(min(index(returns_xts))), "to", format(max(index(returns_xts))), "\n")
+cat("Total trading days:", nrow(returns_xts), "\n")
+cat("Annualized Risk-Free Rate:", percent(rf_annual, accuracy = 0.01), "\n")
+cat("Daily Risk-Free Rate:", percent(rf_daily, accuracy = 0.0001), "\n")
+```
+
+## Data Validation and Summary Check
+
+Verify data integrity, check for missing values, and print head and tail records of returns.
+
+```{r data-validation}
+# Missing value check
+missing_summary <- colSums(is.na(returns_xts))
+print(missing_summary)
+
+# Display head of asset log returns
+head(returns_xts) %>%
+  kbl(caption = "First 6 Days of Asset Daily Log Returns (2020)") %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"))
+```
+
+# Exploratory Financial Analysis
+
+```{r exploratory-stats}
+# Summary statistics table
+table.Stats(asset_returns_xts) %>%
+  kbl(caption = "Descriptive Statistics for Portfolio Assets (2020--2025)") %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"))
+```
+
+## Correlation Structure
+
+```{r correlation-matrix}
+# Compute correlation matrix
+cor_matrix <- cor(asset_returns_xts, use = "pairwise.complete.obs")
+
+# Plot correlation heatmap
+corrplot(
+  cor_matrix,
+  method = "color",
+  type = "upper",
+  addCoef.col = "black",
+  tl.col = "black",
+  number.cex = 0.8,
+  title = "Asset Return Correlation Matrix (Group 3 Universe)",
+  mar = c(0, 0, 2, 0)
+)
+```
+
+# Portfolio Construction (Equal-Weight vs Rebalanced)
+
+```{r portfolio-construction}
+# Placeholder for Portfolio Construction logic
+```
+
+# Portfolio Optimization (Efficient Frontier, GMV, Max Sharpe)
+
+```{r portfolio-optimization}
+# Placeholder for Portfolio Optimization routines
+```
+
+# Portfolio Risk Assessment (VaR, CVaR, Monte Carlo, Stress Testing)
+
+```{r portfolio-risk}
+# Placeholder for Portfolio Risk Assessment routines
+```
+
+# Executive Investment Recommendation
+
+```{r executive-recommendation}
+# Placeholder for final quantitative recommendation summary
+```
