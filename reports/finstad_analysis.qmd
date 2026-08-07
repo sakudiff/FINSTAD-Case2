@@ -1,7 +1,12 @@
 ---
 title: "Portfolio Management and Risk Consultation"
 subtitle: "FINSTAD Case 2 -- Group 3 (Charlie)"
-author: "Group 3: Ricardo Cruz, Enrique Galedo, Josiah Seballos, Camille Seechung, Aaron Sison"
+author:
+  - "CRUZ, Ricardo Miguel Iñigo"
+  - "GALEDO, Enrique Lorenzo Hermoso"
+  - "SEBALLOS, Josiah Dweyn Panganiban"
+  - "SEECHUNG, Camille Castro"
+  - "SISON, Aaron Joshua Estacio"
 date: "August 17, 2026"
 format:
   pdf:
@@ -11,31 +16,35 @@ format:
     number-sections: true
     colorlinks: true
     documentclass: article
-    papersize: letter
+    classoption: 12pt
     geometry:
       - margin=1in
-    header-includes:
-      - \usepackage{fvextra}
-      - \DefineVerbatimEnvironment{Highlighting}{Highlighting}{breaklines,commandchars=\\\{\}}
-      - \usepackage{microtype}
-      - \usepackage{adjustbox}
-      - \usepackage{booktabs}
-      - \usepackage{tabularx}
-      - \usepackage{pdflscape}
-      - \usepackage{float}
-      - \usepackage{ragged2e}
-      - \usepackage{csquotes}
-      - \clubpenalty=10000
-      - \widowpenalty=10000
-      - \displaywidowpenalty=10000
-      - \sloppy
-  html:
-    theme: cosmo
-    toc: true
-    toc-depth: 3
-    number-sections: true
-    code-fold: show
-    code-summary: "Show R Code"
+    fontsize: 11pt
+    code-block-font-size: small
+    highlight-style: arrow
+    keep-tex: true
+include-in-header:
+  - text: |
+      \usepackage{fvextra}
+      \fvset{breaklines=true,breakanywhere=true}
+      \RecustomVerbatimEnvironment{Highlighting}{Verbatim}{breaklines=true,breakanywhere=true,commandchars=\\\{\}}
+      \let\verbatim\Verbatim
+      \let\endverbatim\endVerbatim
+      \usepackage{microtype}
+      \usepackage{adjustbox}
+      \usepackage{booktabs}
+      \usepackage{tabularx}
+      \usepackage{pdflscape}
+      \usepackage{float}
+      \usepackage{ragged2e}
+      \usepackage{csquotes}
+      \clubpenalty=10000
+      \widowpenalty=10000
+      \displaywidowpenalty=10000
+      \sloppy
+execute:
+  warning: false
+  message: false
 ---
 
 ```{r setup, include=FALSE}
@@ -48,6 +57,16 @@ knitr::opts_chunk$set(
   dpi = 300,
   fig.pos = "H"
 )
+
+# Safe kable helper for PDF and HTML rendering
+safe_kable <- function(data, caption = NULL, digits = 4) {
+  knitr::kable(data, caption = caption, digits = digits, booktabs = TRUE) %>%
+    kableExtra::kable_styling(
+      font_size = 8,
+      latex_options = c("scale_down", "HOLD_position", "striped"),
+      bootstrap_options = c("striped", "hover", "condensed")
+    )
+}
 ```
 
 # Setup and Library Loading
