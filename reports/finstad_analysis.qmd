@@ -171,9 +171,203 @@ kbl(stats_df, booktabs = TRUE, digits = 4) %>%
   kable_styling(latex_options = c("striped", "hold_position", "scale_down"), bootstrap_options = c("striped", "hover"))
 ```
 
+## Quantitative Design System (QVRS Theme & Colors)
+
+```{r quant-theme}
+# QVRS Economist Color Tokens
+qvrs_colors <- c(
+  "TEL"  = "#1F2E7A", # Chicago 30
+  "MER"  = "#2E45B8", # Chicago 45
+  "AEV"  = "#475ED1", # Chicago 55
+  "NVDA" = "#1DC9A4", # Hong Kong 45
+  "META" = "#F97A1F", # Singapore 55
+  "BTC"  = "#E3120B", # Economist Red
+  "SPY"  = "#595959"  # London 35
+)
+
+# Custom Economist/QVRS ggplot2 theme
+theme_quant <- function() {
+  theme_minimal() +
+    theme(
+      text = element_text(color = "#0D0D0D"),
+      plot.title = element_text(face = "bold", size = 12, margin = margin(b = 4)),
+      plot.subtitle = element_text(size = 9.5, color = "#333333", margin = margin(b = 8)),
+      plot.caption = element_text(size = 8, color = "#595959", hjust = 0, margin = margin(t = 6)),
+      axis.title = element_text(size = 9, face = "bold", color = "#1A1A1A"),
+      axis.text = element_text(size = 8, color = "#333333"),
+      panel.grid.minor = element_blank(),
+      panel.grid.major = element_line(color = "#F2F2F2", linewidth = 0.3),
+      legend.position = "bottom",
+      legend.title = element_blank(),
+      axis.ticks = element_blank(),
+      strip.background = element_rect(fill = "#EBEDFA", color = NA),
+      strip.text = element_text(face = "bold", size = 9, color = "#141F52")
+    )
+}
+```
+
+## Historical Price & Return Trajectories
+
+```{r}
+#| label: fig-ts-returns
+#| fig.cap: "Daily Log Return Trajectories Across Portfolio Universe (2020--2025)"
+#| fig.width: 8
+#| fig.height: 6
+
+# Reshape returns for tidy plotting
+returns_tidy <- as.data.frame(returns_xts) %>%
+  rownames_to_column(var = "Date") %>%
+  mutate(Date = as.Date(Date)) %>%
+  pivot_longer(-Date, names_to = "Asset", values_to = "Return") %>%
+  mutate(Asset = factor(Asset, levels = names(qvrs_colors)))
+
+ggplot(returns_tidy, aes(x = Date, y = Return, color = Asset)) +
+  geom_line(linewidth = 0.35, alpha = 0.85) +
+  facet_wrap(~ Asset, ncol = 2, scales = "free_y") +
+  scale_color_manual(values = qvrs_colors) +
+  scale_y_continuous(labels = label_percent(accuracy = 1)) +
+  scale_x_date(date_labels = "%Y", date_breaks = "2 years") +
+  labs(
+    title = "Daily Log Return Dynamics and Volatility Clustering",
+    subtitle = "Sample Period: January 2, 2020 through December 31, 2025",
+    x = NULL,
+    y = "Daily Log Return"
+  ) +
+  theme_quant() +
+  theme(legend.position = "none")
+```
+
+## Distributional Shape: Histograms and Empirical Density vs Normal Reference
+
+```{r}
+#| label: fig-density-hist
+#| fig.cap: "Empirical Return Distributions vs Gaussian Reference Curves"
+#| fig.width: 8
+#| fig.height: 6
+
+# Compute normal distribution parameters per asset for reference curves
+norm_params <- returns_tidy %>%
+  group_by(Asset) %>%
+  summarise(
+    mean = mean(Return, na.rm = TRUE),
+    sd = sd(Return, na.rm = TRUE),
+    .groups = "drop"
+  )
+
+# Grid of x values for theoretical normal density overlay
+grid_df <- norm_params %>%
+  group_by(Asset) %>%
+  reframe(
+    x = seq(mean - 4 * sd, mean + 4 * sd, length.out = 200),
+    y = dnorm(x, mean = mean, sd = sd)
+  )
+
+ggplot(returns_tidy, aes(x = Return)) +
+  geom_histogram(
+    aes(y = after_stat(density)),
+    bins = 60,
+    fill = "#D6DBF5",
+    color = "#1F2E7A",
+    linewidth = 0.2,
+    alpha = 0.7
+  ) +
+  geom_density(aes(color = "Empirical Density"), linewidth = 0.8) +
+  geom_line(
+    data = grid_df,
+    aes(x = x, y = y, color = "Gaussian Normal"),
+    linetype = "dashed",
+    linewidth = 0.75
+  ) +
+  facet_wrap(~ Asset, scales = "free", ncol = 3) +
+  scale_color_manual(
+    values = c("Empirical Density" = "#141F52", "Gaussian Normal" = "#E3120B")
+  ) +
+  scale_x_continuous(labels = label_percent(accuracy = 1)) +
+  labs(
+    title = "Empirical Distribution Shape: Heavy Tails and Non-Normality",
+    subtitle = "Comparison of empirical kernel density against theoretical normal distribution",
+    x = "Daily Log Return",
+    y = "Density"
+  ) +
+  theme_quant()
+```
+
+## Quantile-Quantile (Q-Q) Tail Diagnostics
+
+```{r}
+#| label: fig-qq-plots
+#| fig.cap: "Normal Q-Q Diagnostics Demonstrating Heavy Tail Leptokurtosis"
+#| fig.width: 8
+#| fig.height: 5.5
+
+ggplot(returns_tidy, aes(sample = Return)) +
+  stat_qq_line(color = "#E3120B", linewidth = 0.7, linetype = "dashed") +
+  stat_qq(color = "#1F2E7A", alpha = 0.5, size = 0.8) +
+  facet_wrap(~ Asset, scales = "free", ncol = 3) +
+  labs(
+    title = "Quantile-Quantile Tail Departure from Normality",
+    subtitle = "S-shaped curves confirm pronounced fat-tail behavior across asset returns",
+    x = "Theoretical Gaussian Quantiles",
+    y = "Sample Quantiles"
+  ) +
+  theme_quant()
+```
+
+## Return Dispersion & Extreme Outlier Comparison
+
+```{r}
+#| label: fig-boxplots
+#| fig.cap: "Return Dispersion and Extreme Outlier Boxplots"
+#| fig.width: 8
+#| fig.height: 4.5
+
+ggplot(returns_tidy, aes(x = Asset, y = Return, fill = Asset)) +
+  geom_boxplot(outlier.color = "#E3120B", outlier.size = 1, outlier.alpha = 0.5, linewidth = 0.4) +
+  scale_fill_manual(values = qvrs_colors) +
+  scale_y_continuous(labels = label_percent(accuracy = 1)) +
+  labs(
+    title = "Cross-Asset Return Dispersion and Extreme Tail Outliers",
+    subtitle = "Comparison of median, interquartile range (IQR), and extreme shocks",
+    x = "Asset",
+    y = "Daily Log Return"
+  ) +
+  theme_quant() +
+  theme(legend.position = "none")
+```
+
+## Cumulative Performance Comparison (Growth of $1.00)
+
+```{r}
+#| label: fig-cum-returns
+#| fig.cap: "Cumulative Growth Trajectories of USD 1.00 Investment (2020--2025)"
+#| fig.width: 8
+#| fig.height: 4.8
+
+# Compute cumulative wealth index
+cum_returns_df <- as.data.frame(cumprod(1 + returns_xts)) %>%
+  rownames_to_column(var = "Date") %>%
+  mutate(Date = as.Date(Date)) %>%
+  pivot_longer(-Date, names_to = "Asset", values_to = "Wealth") %>%
+  mutate(Asset = factor(Asset, levels = names(qvrs_colors)))
+
+ggplot(cum_returns_df, aes(x = Date, y = Wealth, color = Asset)) +
+  geom_line(linewidth = 0.75) +
+  scale_color_manual(values = qvrs_colors) +
+  scale_y_log10(labels = label_dollar(prefix = "USD ")) +
+  scale_x_date(date_labels = "%Y", date_breaks = "1 year") +
+  labs(
+    title = "Cumulative Wealth Index Growth Trajectories (Log Scale)",
+    subtitle = "Hypothetical USD 1.00 investment performance from January 2020 to December 2025",
+    x = NULL,
+    y = "Wealth Index (USD)"
+  ) +
+  theme_quant()
+```
+
 ## Correlation Structure
 
-```{r correlation-matrix}
+```{r}
+#| label: fig-correlation-matrix
 #| fig.cap: "Asset Return Correlation Heatmap (Group 3 Universe)"
 
 # Compute pairwise correlation matrix
