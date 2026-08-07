@@ -84,12 +84,11 @@ Load the compiled master dataset containing historical daily close prices for Gr
 # Define path to master dataset
 data_path <- file.path("..", "data", "master_dataset.csv")
 
-# Read master dataset
 if (!file.exists(data_path)) {
   data_path <- file.path("data", "master_dataset.csv")
 }
 
-raw_data <- read_csv(data_path)
+raw_data <- read_csv(data_path, show_col_types = FALSE)
 
 # Preview structure
 glimpse(raw_data)
@@ -102,7 +101,7 @@ Compute daily log returns for all portfolio assets and the benchmark:
 $$r_{i,t} = \ln\left(\frac{P_{i,t}}{P_{i,t-1}}\right)$$
 
 ```{r return-computation}
-# Sort by date
+# Sort chronologically by date
 prices_df <- raw_data %>%
   mutate(Date = as.Date(Date)) %>%
   arrange(Date)
@@ -110,8 +109,9 @@ prices_df <- raw_data %>%
 # Extract asset price columns
 asset_cols <- c("TEL", "MER", "AEV", "NVDA", "META", "BTC", "SPY")
 
-# Convert to xts object for quantitative analysis
-prices_xts <- xts(prices_df[, asset_cols], order.by = prices_df[["Date"]])
+# Convert matrix to xts time series object
+prices_mat <- as.matrix(prices_df[, asset_cols])
+prices_xts <- xts(prices_mat, order.by = prices_df[["Date"]])
 
 # Compute daily log returns
 returns_xts <- Return.calculate(prices_xts, method = "log")[-1, ]
@@ -123,47 +123,63 @@ benchmark_asset <- "SPY"
 asset_returns_xts <- returns_xts[, portfolio_assets]
 benchmark_returns_xts <- returns_xts[, benchmark_asset]
 
-# Risk-free rate (annualized PH 91-Day T-Bill average rate converted to daily rate)
+# Risk-free rate (convert annual T-Bill rate to daily log-equivalent rate)
 rf_annual <- mean(prices_df[["RF_Rate"]], na.rm = TRUE)
-rf_daily <- (1 + rf_annual)^(1/252) - 1
+rf_daily <- log(1 + rf_annual) / 252
 
 cat("Dataset span:", format(min(index(returns_xts))), "to", format(max(index(returns_xts))), "\n")
 cat("Total trading days:", nrow(returns_xts), "\n")
 cat("Annualized Risk-Free Rate:", percent(rf_annual, accuracy = 0.01), "\n")
-cat("Daily Risk-Free Rate:", percent(rf_daily, accuracy = 0.0001), "\n")
+cat("Daily Log Risk-Free Rate:", percent(rf_daily, accuracy = 0.0001), "\n")
 ```
 
 ## Data Validation and Summary Check
 
-Verify data integrity, check for missing values, and print head and tail records of returns.
+Verify data integrity, check for missing values, and print head records of returns.
 
-```{r data-validation}
-# Missing value check
+```{r}
+#| label: tbl-data-validation
+#| tbl-cap: "First 6 Days of Asset Daily Log Returns (2020)"
+
+# Verify no missing values in returns time series
 missing_summary <- colSums(is.na(returns_xts))
-print(missing_summary)
+stopifnot(all(missing_summary == 0))
 
-# Display head of asset log returns
-head(returns_xts) %>%
-  kbl(caption = "First 6 Days of Asset Daily Log Returns (2020)") %>%
-  kable_styling(bootstrap_options = c("striped", "hover", "condensed"))
+# Format first 6 rows for table display
+returns_head_df <- as.data.frame(head(returns_xts)) %>%
+  rownames_to_column(var = "Date") %>%
+  mutate(across(-Date, ~ sprintf("%.4f", .x)))
+
+kbl(returns_head_df, booktabs = TRUE, align = "c") %>%
+  kable_styling(latex_options = c("striped", "hold_position"), bootstrap_options = c("striped", "hover"))
 ```
 
 # Exploratory Financial Analysis
 
-```{r exploratory-stats}
-# Summary statistics table
-table.Stats(asset_returns_xts) %>%
-  kbl(caption = "Descriptive Statistics for Portfolio Assets (2020--2025)") %>%
-  kable_styling(bootstrap_options = c("striped", "hover", "condensed"))
+```{r}
+#| label: tbl-exploratory-stats
+#| tbl-cap: "Descriptive Statistics for Portfolio Assets (2020--2025)"
+
+# Compute descriptive statistics
+stats_mat <- table.Stats(asset_returns_xts)
+
+# Convert to data frame for clean rendering
+stats_df <- as.data.frame(stats_mat) %>%
+  rownames_to_column(var = "Metric")
+
+kbl(stats_df, booktabs = TRUE, digits = 4) %>%
+  kable_styling(latex_options = c("striped", "hold_position", "scale_down"), bootstrap_options = c("striped", "hover"))
 ```
 
 ## Correlation Structure
 
 ```{r correlation-matrix}
-# Compute correlation matrix
+#| fig.cap: "Asset Return Correlation Heatmap (Group 3 Universe)"
+
+# Compute pairwise correlation matrix
 cor_matrix <- cor(asset_returns_xts, use = "pairwise.complete.obs")
 
-# Plot correlation heatmap
+# Render correlation heatmap
 corrplot(
   cor_matrix,
   method = "color",
@@ -171,8 +187,7 @@ corrplot(
   addCoef.col = "black",
   tl.col = "black",
   number.cex = 0.8,
-  title = "Asset Return Correlation Matrix (Group 3 Universe)",
-  mar = c(0, 0, 2, 0)
+  mar = c(0, 0, 1, 0)
 )
 ```
 
