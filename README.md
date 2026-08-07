@@ -63,6 +63,36 @@ Team members working on report sections can edit files in Overleaf or locally in
 - Subsection heading uses `\subsection{Subsection Title}`
 - Subsubsection heading uses `\subsubsection{Subsubsection Title}`
 
+### Escaping Reserved Financial Symbols
+
+LaTeX uses several characters for formatting syntax. Escape them with a backslash when writing text or numbers.
+
+- Percent sign uses `\%` instead of `%` (an unescaped `%` comments out the rest of the line)
+- Dollar sign uses `\$` instead of `$` (an unescaped `$` enters inline math mode)
+- Underscore uses `\_` instead of `_` (an unescaped `_` creates a subscript)
+- Ampersand uses `\&` instead of `&` (an unescaped `&` creates a table column separator)
+- Hashtag or number sign uses `\#` instead of `#`
+
+### Bullet Lists and Enumerations
+
+Unordered lists use the `itemize` environment.
+
+```latex
+\begin{itemize}
+  \item Primary recommendation is to allocate 40\% to international equities.
+  \item Rebalancing monthly reduces overall portfolio volatility.
+\end{itemize}
+```
+
+Numbered lists use the `enumerate` environment.
+
+```latex
+\begin{enumerate}
+  \item Compute log returns for each asset class.
+  \item Solve for the Global Minimum Variance portfolio weights.
+\end{enumerate}
+```
+
 ### Inserting Images and Figures
 
 Place image files in `reports/figures/` and reference them using the standard figure environment.
@@ -78,7 +108,32 @@ Place image files in `reports/figures/` and reference them using the standard fi
 
 Reference the figure in text using `Figure~\ref{fig:figure_label}`.
 
-### Creating Tables
+### Side by Side Subfigures
+
+Use `subfigure` blocks inside a `figure` environment to compare two charts side by side.
+
+```latex
+\begin{figure}[H]
+  \centering
+  \begin{subfigure}[b]{0.48\textwidth}
+    \centering
+    \safeincludegraphics[width=\textwidth]{figures/price_plot.png}
+    \caption{Historical Price Trajectories}
+    \label{fig:sub_price}
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}[b]{0.48\textwidth}
+    \centering
+    \safeincludegraphics[width=\textwidth]{figures/return_plot.png}
+    \caption{Daily Return Distributions}
+    \label{fig:sub_returns}
+  \end{subfigure}
+  \caption{Exploratory Asset Performance Comparison}
+  \label{fig:side_by_side}
+\end{figure}
+```
+
+### Creating Standard Tables
 
 Tables follow the `booktabs` package format for academic presentation.
 
@@ -100,6 +155,29 @@ Tables follow the `booktabs` package format for academic presentation.
 
 Reference the table in text using `Table~\ref{tab:desc_stats}`.
 
+### Wide Landscape Tables
+
+For wide tables like correlation heatmaps or multi metric risk matrices, use the `largetable` environment.
+
+```latex
+\begin{largetable}
+  \caption{Full Asset Universe Correlation Matrix}
+  \label{tab:corr_matrix}
+  \begin{tabular}{lrrrrrrr}
+    \toprule
+    Asset & TEL & MER & AEV & NVDA & META & BTC & SPY \\
+    \midrule
+    TEL & 1.00 & 0.45 & 0.38 & 0.12 & 0.15 & 0.08 & 0.22 \\
+    \bottomrule
+  \end{tabular}
+\end{largetable}
+```
+
+### Footnotes and Table Notes
+
+- Footnotes in text use `\footnote{Source: LSEG Workspace and Bloomberg Terminal}`
+- Notes inside tables use `\tablefootnote{Computed using daily log returns over 2020 through 2025}`
+
 ### Mathematical Equations
 
 - Inline math uses single dollar signs like `$R_{i} = \ln(P_{t} / P_{t-1})$`
@@ -109,6 +187,14 @@ Reference the table in text using `Table~\ref{tab:desc_stats}`.
 \begin{equation}
   \text{Sharpe Ratio} = \frac{E[R_{p}] - R_{f}}{\sigma_{p}}
 \end{equation}
+```
+
+### Code Listings for R Appendix
+
+To embed R code in the appendix, use the `lstinputlisting` command or `listings` environment.
+
+```latex
+\lstinputlisting[language=R, caption={Data Acquisition and Cleaning Script}]{../R/fetch_data.py}
 ```
 
 ### References and Citations
