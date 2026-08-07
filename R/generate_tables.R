@@ -50,9 +50,9 @@ tex_summary <- kbl(
   booktabs = TRUE,
   col.names = c("Asset Ticker", "Asset Class", "Primary Source / Exchange", "Observations", "Sample Period"),
   caption = "Asset Universe and Data Acquisition Specifications",
-  label = "tab:data_summary"
+  label = "data_summary"
 ) %>%
-  kable_styling(latex_options = c("striped", "hold_position", "scale_down"), font_size = 9)
+  kable_styling(latex_options = c("HOLD_position", "scale_down"), font_size = 9)
 
 writeLines(as.character(tex_summary), file.path(tables_dir, "tbl_data_summary.tex"))
 
@@ -74,9 +74,9 @@ tex_stats <- kbl(
   booktabs = TRUE,
   digits = 4,
   caption = "Exploratory Financial Descriptive Statistics (Daily Log Returns, 2020--2025)",
-  label = "tab:desc_stats"
+  label = "desc_stats"
 ) %>%
-  kable_styling(latex_options = c("striped", "hold_position", "scale_down"), font_size = 8)
+  kable_styling(latex_options = c("HOLD_position", "scale_down"), font_size = 8)
 
 writeLines(as.character(tex_stats), file.path(tables_dir, "tbl_desc_stats.tex"))
 
@@ -93,9 +93,9 @@ tex_corr <- kbl(
   booktabs = TRUE,
   digits = 4,
   caption = "Pairwise Asset Return Correlation Matrix",
-  label = "tab:correlation"
+  label = "correlation"
 ) %>%
-  kable_styling(latex_options = c("striped", "hold_position"), font_size = 9)
+  kable_styling(latex_options = c("HOLD_position", "scale_down"), font_size = 9)
 
 writeLines(as.character(tex_corr), file.path(tables_dir, "tbl_correlation.tex"))
 
