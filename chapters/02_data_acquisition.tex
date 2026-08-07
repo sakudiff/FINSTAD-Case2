@@ -1,31 +1,76 @@
 \section{Data Acquisition and Preparation}
 
-The construction of an optimal multi asset portfolio requires empirical rigor during data collection, alignment, and transformation. This section details the data acquisition architecture, asset universe parameterization, exchange calibration, and return metric engineering executed for Group 3.
+The construction of a quantitative multi asset portfolio requires empirical rigor during data collection, market calendar alignment, missing value interpolation, and feature engineering. This section details the complete end-to-end data pipeline executed for Group 3, tracing raw multi-source ingestion through final matrix transformations.
 
-\subsection{Asset Universe and Sampling Specifications}
+\subsection{Asset Universe and Ingestion Pipeline}
 
-The asset universe was deliberately structured across geographic boundaries, asset classes, and risk profiles to test cross market diversification dynamics. The sample period covers six full calendar years from January 2, 2020 through December 31, 2025, capturing 1,509 trading days across major global markets.
+The portfolio universe spans seven financial assets across four distinct asset classes, alongside the benchmark index and domestic risk free rate. The sampling horizon covers six calendar years from January 2, 2020 through December 31, 2025, yielding 1,509 daily trading observations per asset.
 
-The portfolio comprises three domestic Philippine equities, two international US technology equities, one global cryptocurrency, one global equity benchmark ETF, and a domestic risk free rate asset.
+Raw asset prices were programmatically ingested via automated Python REST scripts leveraging the \texttt{yfinance} API. International American Depositary Receipt (ADR) tickers were specified for Philippine equities to guarantee continuous historical series without data fragmentation.
 
-PLDT Inc. (TEL), Manila Electric Company (MER), and Aboitiz Equity Ventures (AEV) represent domestic Philippine blue chip equities. NVIDIA Corporation (NVDA) and Meta Platforms, Inc. (META) capture international mega cap technology exposure. Bitcoin (BTC) introduces non traditional digital asset dynamics. The SPDR S\&P 500 ETF Trust (SPY) serves as the global market benchmark. The Philippine 91-Day Treasury Bill secondary market rate represents the domestic risk free rate benchmark.
+\begin{itemize}
+  \item \textbf{PLDT Inc. (TEL):} Primary PSE listing mapped to NYSE depositary ticker PHI.
+  \item \textbf{Manila Electric Company (MER):} Primary PSE listing mapped to OTC depositary ticker MAEOY.
+  \item \textbf{Aboitiz Equity Ventures (AEV):} Primary PSE listing mapped to OTC depositary ticker ABTZY.
+  \item \textbf{NVIDIA Corporation (NVDA):} Ingested directly from NASDAQ exchange endpoints.
+  \item \textbf{Meta Platforms, Inc. (META):} Ingested directly from NASDAQ exchange endpoints.
+  \item \textbf{Bitcoin (BTC):} Ingested from global cryptocurrency spot market feeds as BTC-USD.
+  \item \textbf{SPDR S\&P 500 ETF Trust (SPY):} Ingested from NYSE Arca as the benchmark ETF.
+  \item \textbf{Risk-Free Rate:} Annualized Philippine 91-Day Treasury Bill secondary market rate (5.25 percent benchmark).
+\end{itemize}
 
-Table~\ref{tab:data_summary} details the data acquisition parameters, asset classification structure, exchange sources, observation counts, and temporal coverage across the entire asset universe.
+Table~\ref{tab:data_summary} presents the complete data acquisition specifications, exchange mappings, observation counts, and sample horizons.
 
 \input{tables/tbl_data_summary.tex}
 
-The selection of international ADR tickers for Philippine equities resolves a persistent data availability issue in emerging market historical databases. Primary Philippine Stock Exchange endpoints on public data providers often suffer from missing observations or structural delisting breaks. Using foreign depositary receipts ensures continuous price discovery without missing data points across the 1,508 return intervals.
+\subsection{Calendar Alignment, Relational Joins, and Imputation}
 
-\subsection{Data Alignment and Logarithmic Return Engineering}
+Financial asset price series originate from heterogeneous trading environments operating on asynchronous market schedules. Cryptocurrency markets trade continuously 24 hours a day across 365 days a year, whereas US equity exchanges observe NYSE holiday schedules and Philippine equities trade on PSE operating calendars.
 
-Global financial markets operate on asynchronous trading calendars, differing market hours, and distinct holiday schedules. Cryptocurrency markets trade continuously 24 hours a day, whereas US equity exchanges follow NYSE trading calendars and Philippine equities trade on PSE operating schedules.
+To reconcile calendar discrepancies, individual asset time series were joined using relational outer joins keyed on ISO-8601 standardized date timestamps. The master date index was anchored to the official 1,509 trading day calendar of the SPDR S\&P 500 ETF Trust (SPY).
 
-To maintain temporal synchronization, all daily price series were merged onto the primary trading calendar of the SPDR S\&P 500 ETF Trust (SPY). Days where primary equity markets were closed were forward filled from the preceding trading day's closing price. This alignment preserves trading day integrity while eliminating non-synchronous calendar noise.
+Missing observations arising from market specific holidays or non-trading days were imputed using last observation carried forward (LOCF) forward filling. Forward filling assumes that asset prices remain unchanged on days when an exchange is closed, preventing look-ahead bias and preserving true market settlement prices. Initial missing values occurring prior to asset listing dates were resolved using backward filling. The resulting dataset contains zero missing values across the 12,072 total data cells.
 
-Daily asset price trajectories were converted into continuously compounded log returns according to the standard mathematical formulation.
+\subsection{Feature Engineering and Mathematical Transformations}
+
+Raw adjusted closing prices were subjected to mathematical transformations to construct stationary return series, scaled benchmark features, cumulative growth paths, and risk parameters required for downstream quantitative modeling.
+
+\subsubsection{Logarithmic Return Transformation}
+
+Adjusted closing prices were transformed into continuously compounded daily log returns according to the standard logarithmic return formula.
 
 \begin{equation}
-  r_{i,t} = \ln\left(\frac{P_{i,t}}{P_{i,t-1}}\right)
+  r_{i,t} = \ln\left(\frac{P_{i,t}}{P_{i,t-1}}\right) = \ln(P_{i,t}) - \ln(P_{i,t-1})
 \end{equation}
 
-Continuous log returns offer crucial theoretical advantages over simple arithmetic returns in quantitative finance. Log returns are time additive across sequential investment horizons, enabling linear compounding over the 1,508 daily intervals. Furthermore, log returns normalize extreme price expansions, preventing asymmetric distortion when evaluating high growth assets such as Bitcoin or NVIDIA alongside mature utility equities.
+Logarithmic transformation converts compounding price ratios into linear additive values over time, facilitating multi period horizon aggregation. Log transformation also stabilizes return variance across high growth regimes, ensuring that extreme price movements in assets like Bitcoin or NVIDIA remain scale comparable with utility equities.
+
+\subsubsection{Risk-Free Rate Daily Scaling}
+
+The domestic benchmark risk free rate is quoted as an annualized yield percentage of 5.25 percent per annum. To align the risk free rate with daily log return series, the annual yield was transformed into a daily log equivalent rate using a 252 trading day annual convention.
+
+\begin{equation}
+  r_{f,t} = \frac{\ln(1 + R_f^{\text{annual}})}{252} = \frac{\ln(1 + 0.0525)}{252} \approx 0.00020307
+\end{equation}
+
+This transformation yields a constant daily risk free baseline of 0.0203 percent per day, which serves as the hurdle rate in subsequent Sharpe ratio and excess return computations.
+
+\subsubsection{Cumulative Wealth Index Feature}
+
+To track total capital appreciation from an initial baseline of USD 1.00, a cumulative wealth index feature was constructed for each asset by exponentiating cumulative log returns.
+
+\begin{equation}
+  W_{i,t} = \exp\left( \sum_{\tau=1}^{t} r_{i,\tau} \right) = \prod_{\tau=1}^{t} \left( \frac{P_{i,\tau}}{P_{i,\tau-1}} \right)
+\end{equation}
+
+The cumulative wealth feature provides an intuitive trajectory of asset growth without distortion from daily volatility oscillations.
+
+\subsubsection{Rolling Volatility and Covariance Engineering}
+
+Dynamic risk features were generated by computing 30-day and 60-day rolling annualized standard deviations and rolling pairwise covariance matrices.
+
+\begin{equation}
+  \sigma_{i,t}^{\text{annual}} = \sqrt{252 \times \frac{1}{N-1} \sum_{k=0}^{N-1} (r_{i,t-k} - \bar{r}_{i,t})^2 }
+\end{equation}
+
+These engineered features capture time varying volatility regimes, enabling conditional risk evaluation during crisis periods such as the March 2020 market crash and 2022 rate hike cycles.
