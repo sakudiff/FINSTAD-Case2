@@ -1,0 +1,87 @@
+\section{Exploratory Financial Analysis}
+
+This section presents empirical descriptive statistics, distributional shape diagnostics, return dispersion comparisons, and correlation structures across the asset universe over the 2020 through 2025 sampling period.
+
+\subsection{Descriptive Statistical Summary}
+
+Table~\ref{tab:desc_stats} provides the summary statistics computed from daily log returns across all portfolio assets and the benchmark index.
+
+\input{tables/tbl_desc_stats.tex}
+
+The descriptive results highlight clear risk-return trade-offs. International technology equities and cryptocurrency delivered higher average daily log returns, accompanied by substantially elevated volatility. Bitcoin (BTC) exhibited the highest daily standard deviation, followed by NVIDIA (NVDA) and Meta Platforms (META). Conversely, Philippine equities (TEL, MER, AEV) demonstrated lower volatility profiles, functioning as defensive anchors within the portfolio.
+
+All asset return distributions exhibit excess kurtosis (kurtosis greater than 3.0), indicating leptokurtic behavior characterized by fat tails and heightened frequency of extreme market movements relative to a normal distribution.
+
+\subsection{Historical Return Dynamics and Volatility Clustering}
+
+Figure~\ref{fig:ts_returns} depicts the daily log return trajectories across the sample period.
+
+\begin{figure}[H]
+  \centering
+  \safeincludegraphics[width=\textwidth]{figures/fig-ts-returns-1.pdf}
+  \caption{Daily Log Return Trajectories Across Portfolio Assets (2020--2025)}
+  \label{fig:ts_returns}
+\end{figure}
+
+The time-series plots demonstrate distinct volatility clustering, where periods of high volatility are followed by high volatility. The market wide impact of the March 2020 pandemic onset is visible across all equities, followed by sector specific drawdowns during global monetary tightening in 2022.
+
+\subsection{Distributional Shape and Non-Normality Diagnostics}
+
+Figure~\ref{fig:density_hist} compares empirical kernel density estimates against theoretical Gaussian normal distribution curves fitted to each asset's mean and variance.
+
+\begin{figure}[H]
+  \centering
+  \safeincludegraphics[width=\textwidth]{figures/fig-density-hist-1.pdf}
+  \caption{Empirical Return Distributions vs. Gaussian Reference Curves}
+  \label{fig:density_hist}
+\end{figure}
+
+The empirical densities feature sharp central peaks and extended, heavy tails. Figure~\ref{fig:qq_plots} provides normal Quantile-Quantile (Q-Q) plots, which further substantiate heavy tail departure from Gaussian normality through pronounced S-shaped curvature at both extremes.
+
+\begin{figure}[H]
+  \centering
+  \safeincludegraphics[width=\textwidth]{figures/fig-qq-plots-1.pdf}
+  \caption{Normal Q-Q Diagnostics Demonstrating Heavy Tail Leptokurtosis}
+  \label{fig:qq_plots}
+\end{figure}
+
+\subsection{Return Dispersion and Outlier Structure}
+
+Figure~\ref{fig:boxplots} presents cross-asset return dispersion boxplots, highlighting medians, interquartile ranges, and extreme daily outliers.
+
+\begin{figure}[H]
+  \centering
+  \safeincludegraphics[width=\textwidth]{figures/fig-boxplots-1.pdf}
+  \caption{Cross-Asset Return Dispersion and Extreme Outlier Boxplots}
+  \label{fig:boxplots}
+\end{figure}
+
+Bitcoin and technology equities display wide interquartile ranges and long outlier tails. Domestic Philippine equities display compact interquartile ranges, illustrating greater short term return stability.
+
+\subsection{Cumulative Wealth Growth Trajectories}
+
+Figure~\ref{fig:cum_returns} shows the cumulative wealth growth of a hypothetical USD 1.00 investment from January 2020 through December 2025 on a logarithmic scale.
+
+\begin{figure}[H]
+  \centering
+  \safeincludegraphics[width=\textwidth]{figures/fig-cum-returns-1.pdf}
+  \caption{Cumulative Wealth Index Growth Trajectories (Log Scale)}
+  \label{fig:cum_returns}
+\end{figure}
+
+International technology equities and Bitcoin achieved strong multi year capital appreciation despite experiencing severe drawdown phases during 2022.
+
+\subsection{Asset Return Correlation Structure}
+
+Table~\ref{tab:correlation} presents the pairwise correlation matrix across the asset universe, while Figure~\ref{fig:correlation_heatmap} displays the correlation heatmap.
+
+\input{tables/tbl_correlation.tex}
+
+\begin{figure}[H]
+  \centering
+  \safeincludegraphics[width=0.85\textwidth]{figures/fig-correlation-matrix-1.pdf}
+  \caption{Asset Return Correlation Heatmap (Group 3 Universe)}
+  \label{fig:correlation_heatmap}
+\end{figure}
+
+The correlation matrix reveals low pairwise linear correlation between Philippine domestic stocks (TEL, MER, AEV) and US technology equities (NVDA, META) or Bitcoin. This low cross-market correlation provides a strong quantitative foundation for international portfolio diversification.
