@@ -88,6 +88,10 @@ library(PortfolioAnalytics)
 # Solvers for portfolio optimization
 library(ROI)
 library(ROI.plugin.quadprog)
+library(nloptr) 
+
+# For Portfolio Risk Assessment
+library(MASS) 
 
 # Table formatting and visual aesthetics
 library(corrplot)
@@ -579,13 +583,427 @@ ggplot(weights_bnh_df, aes(x = Date, y = Weight, fill = Asset)) +
 # Portfolio Optimization (Efficient Frontier, GMV, Max Sharpe)
 
 ```{r portfolio-optimization}
-# Placeholder for Portfolio Optimization routines
+mu_ann    <- colMeans(asset_returns_smp, na.rm = TRUE) * 252
+Sigma_ann <- cov(asset_returns_smp, use = "pairwise.complete.obs") * 252
+
+n_assets    <- length(mu_ann)
+asset_names <- names(mu_ann)
+
+# Equal-weight starting point for the solver
+w0 <- rep(1 / n_assets, n_assets)
 ```
+
+```{r}
+# --- Objective 1: portfolio variance (minimized for GMV and each Efficient Frontier point) ---
+eval_f_var <- function(w) {
+  as.numeric(t(w) %*% Sigma_ann %*% w)
+}
+
+# Gradient via finite differences (nloptr's built-in numerical gradient helper)
+eval_grad_f_var <- function(w) {
+  nl.grad(w, eval_f_var)
+}
+
+# --- Objective 2: negative Sharpe ratio (minimized to find the tangency / Max Sharpe portfolio) ---
+eval_f_sharpe <- function(w) {
+  port_ret <- sum(w * mu_ann)
+  port_sd  <- sqrt(as.numeric(t(w) %*% Sigma_ann %*% w))
+  -(port_ret - rf_annual) / port_sd  # negative since nloptr always minimizes
+}
+
+eval_grad_f_sharpe <- function(w) {
+  nl.grad(w, eval_f_sharpe)
+}
+
+# --- Constraint: weights must sum to 1 (fully invested, no cash drag) ---
+eval_g_eq_sum1 <- function(w) {
+  sum(w) - 1
+}
+
+eval_jac_g_eq_sum1 <- function(w) {
+  nl.jacobian(w, eval_g_eq_sum1)
+}
+
+# Solver settings: SLSQP as guided, since it's the R equivalent of Excel's GRG Nonlinear
+opt_settings <- list(
+  "algorithm" = "NLOPT_LD_SLSQP",
+  "xtol_rel"  = 1.0e-8,
+  "maxeval"   = 1000
+)
+```
+
+```{r}
+# --- Global Minimum Variance (GMV) Portfolio ---
+gmv_solution <- nloptr(
+  x0            = w0,
+  eval_f        = eval_f_var,
+  eval_grad_f   = eval_grad_f_var,
+  lb            = rep(0, n_assets),   # long-only, no shorting
+  ub            = rep(1, n_assets),   # no single asset above 100%
+  eval_g_eq     = eval_g_eq_sum1,
+  eval_jac_g_eq = eval_jac_g_eq_sum1,
+  opts          = opt_settings
+)
+
+w_gmv <- gmv_solution$solution
+names(w_gmv) <- asset_names
+
+gmv_ret <- sum(w_gmv * mu_ann)
+gmv_sd  <- sqrt(as.numeric(t(w_gmv) %*% Sigma_ann %*% w_gmv))
+```
+
+```{r}
+# --- Maximum Sharpe Ratio (Tangency) Portfolio ---
+sharpe_solution <- nloptr(
+  x0            = w0,
+  eval_f        = eval_f_sharpe,
+  eval_grad_f   = eval_grad_f_sharpe,
+  lb            = rep(0, n_assets),
+  ub            = rep(1, n_assets),
+  eval_g_eq     = eval_g_eq_sum1,
+  eval_jac_g_eq = eval_jac_g_eq_sum1,
+  opts          = opt_settings
+)
+
+w_sharpe <- sharpe_solution$solution
+names(w_sharpe) <- asset_names
+
+sharpe_ret <- sum(w_sharpe * mu_ann)
+sharpe_sd  <- sqrt(as.numeric(t(w_sharpe) %*% Sigma_ann %*% w_sharpe))
+sharpe_val <- (sharpe_ret - rf_annual) / sharpe_sd
+```
+
+```{r}
+# --- Efficient Frontier: sweep target returns, solve exact QP at each one ---
+# This is a quadratic program (quadratic objective, linear constraints) with
+# one unique global optimum per target -- nloptr/SLSQP with numerical
+# (finite-difference) gradients was landing on feasible-but-suboptimal
+# points for some targets, producing the sawtooth. Solving the exact QP via
+# quadprog removes gradient approximation error entirely.
+library(quadprog)
+
+target_returns <- seq(min(mu_ann), max(mu_ann), length.out = 50)
+frontier_list  <- vector("list", length(target_returns))
+
+# solve.QP minimizes 0.5*w'Dw - d'w subject to t(Amat)%*%w >= bvec,
+# with the first `meq` constraints treated as equalities.
+D <- 2 * Sigma_ann + diag(1e-6, n_assets)  # was 1e-8
+d <- rep(0, n_assets)
+
+for (i in seq_along(target_returns)) {
+  target <- target_returns[i]
+
+  Amat <- cbind(
+    rep(1, n_assets),  # sum(w) = 1
+    mu_ann,            # sum(w * mu_ann) = target
+    diag(n_assets),    # w >= 0
+    -diag(n_assets)    # -w >= -1  (i.e. w <= 1)
+  )
+  bvec <- c(1, target, rep(0, n_assets), rep(-1, n_assets))
+
+  sol <- tryCatch(
+    quadprog::solve.QP(Dmat = D, dvec = d, Amat = Amat, bvec = bvec, meq = 2),
+    error = function(e) NULL
+  )
+
+  if (!is.null(sol)) {
+    w_i <- sol$solution
+    frontier_list[[i]] <- data.frame(
+      Target_Return = target,
+      Risk   = sqrt(as.numeric(t(w_i) %*% Sigma_ann %*% w_i)),
+      Return = sum(w_i * mu_ann)
+    )
+  }
+}
+
+efficient_frontier_df <- bind_rows(frontier_list)
+```
+
+```{r}
+#| label: fig-efficient-frontier
+#| fig.cap: "Efficient Frontier with Global Minimum Variance and Maximum Sharpe Portfolios"
+#| fig.width: 8
+#| fig.height: 5
+
+efficient_only_df <- efficient_frontier_df[efficient_frontier_df$Return >= gmv_ret, ]
+
+ggplot(efficient_only_df, aes(x = Risk, y = Return)) +
+  geom_path(color = "#1F2E7A", linewidth = 0.9) +
+  geom_point(
+    data = data.frame(Risk = gmv_sd, Return = gmv_ret),
+    aes(x = Risk, y = Return), color = "#E3120B", size = 3
+  ) +
+  geom_point(
+    data = data.frame(Risk = sharpe_sd, Return = sharpe_ret),
+    aes(x = Risk, y = Return), color = "#1DC9A4", size = 3
+  ) +
+  scale_x_continuous(labels = label_percent(accuracy = 1)) +
+  scale_y_continuous(labels = label_percent(accuracy = 1)) +
+  labs(
+    title = "Efficient Frontier: Risk-Return Tradeoff",
+    subtitle = "Red point = Global Minimum Variance | Teal point = Maximum Sharpe Ratio",
+    x = "Annualized Volatility (Risk)",
+    y = "Annualized Expected Return"
+  ) +
+  theme_quant()
+```
+
+```{r}
+#| label: tbl-optimal-weights
+#| tbl-cap: "Optimal Portfolio Weights: GMV vs Maximum Sharpe"
+
+optimal_weights_df <- data.frame(
+  Asset             = asset_names,
+  GMV_Weight        = sprintf("%.2f%%", w_gmv * 100),
+  MaxSharpe_Weight  = sprintf("%.2f%%", w_sharpe * 100)
+)
+
+safe_kable(optimal_weights_df, caption = "Optimal Portfolio Weights: GMV vs Maximum Sharpe")
+```
+
+```{r}
+#| label: fig-portfolio-allocation
+#| fig.cap: "Optimal Portfolio Allocation by Asset (GMV vs Max Sharpe)"
+#| fig.width: 8
+#| fig.height: 4.5
+
+weights_long_df <- data.frame(
+  Asset     = rep(asset_names, 2),
+  Portfolio = rep(c("GMV", "Max Sharpe"), each = n_assets),
+  Weight    = c(w_gmv, w_sharpe)
+)
+
+ggplot(weights_long_df, aes(x = Asset, y = Weight, fill = Asset)) +
+  geom_col() +
+  facet_wrap(~ Portfolio) +
+  scale_fill_manual(values = qvrs_colors) +
+  scale_y_continuous(labels = label_percent(accuracy = 1)) +
+  labs(
+    title = "Optimal Portfolio Allocation by Asset",
+    subtitle = "Comparison between Global Minimum Variance and Maximum Sharpe portfolios",
+    x = NULL, y = "Portfolio Weight"
+   ) +
+  theme_quant() +
+  theme(legend.position = "none")
+```
+
 
 # Portfolio Risk Assessment (VaR, CVaR, Monte Carlo, Stress Testing)
 
 ```{r portfolio-risk}
-# Placeholder for Portfolio Risk Assessment routines
+port_returns_gmv <- Return.portfolio(
+  R = asset_returns_smp,
+  weights = w_gmv,
+  rebalance_on = "months"
+)
+
+port_returns_sharpe <- Return.portfolio(
+  R = asset_returns_smp,
+  weights = w_sharpe,
+  rebalance_on = "months"
+)
+```
+
+```{r}
+#| label: tbl-var-summary
+#| tbl-cap: "Historical and Parametric VaR / CVaR Summary (Daily, 95% and 99% Confidence)"
+
+# --- 1. Compute Individual VaR and ES Metrics ---
+# Global Minimum Variance (GMV)
+v_hist_gmv_95 <- abs(as.numeric(VaR(port_returns_gmv, p = 0.95, method = "historical")))
+v_hist_gmv_99 <- abs(as.numeric(VaR(port_returns_gmv, p = 0.99, method = "historical")))
+v_para_gmv_95 <- abs(as.numeric(VaR(port_returns_gmv, p = 0.95, method = "gaussian")))
+v_para_gmv_99 <- abs(as.numeric(VaR(port_returns_gmv, p = 0.99, method = "gaussian")))
+
+e_hist_gmv_95 <- abs(as.numeric(ES(port_returns_gmv, p = 0.95, method = "historical")))
+e_hist_gmv_99 <- abs(as.numeric(ES(port_returns_gmv, p = 0.99, method = "historical")))
+e_para_gmv_95 <- abs(as.numeric(ES(port_returns_gmv, p = 0.95, method = "gaussian")))
+e_para_gmv_99 <- abs(as.numeric(ES(port_returns_gmv, p = 0.99, method = "gaussian")))
+
+# Max Sharpe
+v_hist_shp_95 <- abs(as.numeric(VaR(port_returns_sharpe, p = 0.95, method = "historical")))
+v_hist_shp_99 <- abs(as.numeric(VaR(port_returns_sharpe, p = 0.99, method = "historical")))
+v_para_shp_95 <- abs(as.numeric(VaR(port_returns_sharpe, p = 0.95, method = "gaussian")))
+v_para_shp_99 <- abs(as.numeric(VaR(port_returns_sharpe, p = 0.99, method = "gaussian")))
+
+e_hist_shp_95 <- abs(as.numeric(ES(port_returns_sharpe, p = 0.95, method = "historical")))
+e_hist_shp_99 <- abs(as.numeric(ES(port_returns_sharpe, p = 0.99, method = "historical")))
+e_para_shp_95 <- abs(as.numeric(ES(port_returns_sharpe, p = 0.95, method = "gaussian")))
+e_para_shp_99 <- abs(as.numeric(ES(port_returns_sharpe, p = 0.99, method = "gaussian")))
+
+# --- 2. Construct Data Frame ---
+risk_summary_df <- data.frame(
+  Portfolio = rep(c("GMV", "Max Sharpe"), each = 4),
+  Metric    = rep(c("Historical VaR", "Parametric VaR", "Historical ES (CVaR)", "Parametric ES (CVaR)"), 2),
+  `95% CI`  = sprintf("%.2f%%", c(
+    v_hist_gmv_95, v_para_gmv_95, e_hist_gmv_95, e_para_gmv_95,
+    v_hist_shp_95, v_para_shp_95, e_hist_shp_95, e_para_shp_95
+  ) * 100),
+  `99% CI`  = sprintf("%.2f%%", c(
+    v_hist_gmv_99, v_para_gmv_99, e_hist_gmv_99, e_para_gmv_99,
+    v_hist_shp_99, v_para_shp_99, e_hist_shp_99, e_para_shp_99
+  ) * 100),
+  check.names = FALSE
+)
+
+# --- 3. Render Table (styled consistently with the rest of the report) ---
+safe_kable(risk_summary_df, caption = "Historical and Parametric VaR / CVaR Summary (Daily, 95% and 99% Confidence)")
+```
+
+```{r}
+# Simulate 10,000 one-day return scenarios using the annualized mean/covariance
+# structure, converted back to daily, drawn from a multivariate normal distribution
+set.seed(123)
+n_sims <- 10000
+
+mu_daily    <- mu_ann / 252
+Sigma_daily <- Sigma_ann / 252
+
+sim_asset_returns <- mvrnorm(n = n_sims, mu = mu_daily, Sigma = Sigma_daily)
+colnames(sim_asset_returns) <- asset_names
+
+# Apply portfolio weights to each simulated draw
+sim_port_returns_gmv    <- as.numeric(sim_asset_returns %*% w_gmv)
+sim_port_returns_sharpe <- as.numeric(sim_asset_returns %*% w_sharpe)
+
+# Monte Carlo VaR and ES (empirical quantile of the simulated distribution)
+mc_var_gmv_95    <- quantile(sim_port_returns_gmv, 0.05)
+mc_var_sharpe_95 <- quantile(sim_port_returns_sharpe, 0.05)
+
+mc_es_gmv_95    <- mean(sim_port_returns_gmv[sim_port_returns_gmv <= mc_var_gmv_95])
+mc_es_sharpe_95 <- mean(sim_port_returns_sharpe[sim_port_returns_sharpe <= mc_var_sharpe_95])
+
+mc_summary_df <- data.frame(
+  Portfolio = c("GMV", "Max Sharpe"),
+  `MC VaR (95%)` = sprintf("%.2f%%", c(abs(mc_var_gmv_95), abs(mc_var_sharpe_95)) * 100),
+  `MC ES (95%)`  = sprintf("%.2f%%", c(abs(mc_es_gmv_95), abs(mc_es_sharpe_95)) * 100),
+  check.names = FALSE
+)
+```
+
+```{r}
+#| label: tbl-mc-summary
+#| tbl-cap: "Monte Carlo Simulated VaR and Expected Shortfall (10,000 Simulations)"
+
+safe_kable(mc_summary_df, caption = "Monte Carlo Simulated VaR and Expected Shortfall (10,000 Simulations)")
+```
+
+
+
+```{r}
+#| label: fig-mc-distribution
+#| fig.cap: "Historical vs Monte Carlo Simulated Return Distribution (Max Sharpe Portfolio)"
+#| fig.width: 8
+#| fig.height: 5
+
+dist_compare_df <- bind_rows(
+  data.frame(Return = as.numeric(port_returns_sharpe), Source = "Historical"),
+  data.frame(Return = sim_port_returns_sharpe, Source = "Monte Carlo")
+)
+
+ggplot(dist_compare_df, aes(x = Return, fill = Source, color = Source)) +
+  geom_density(alpha = 0.35, linewidth = 0.7) +
+  scale_fill_manual(values = c("Historical" = "#1F2E7A", "Monte Carlo" = "#E3120B")) +
+  scale_color_manual(values = c("Historical" = "#1F2E7A", "Monte Carlo" = "#E3120B")) +
+  scale_x_continuous(labels = label_percent(accuracy = 1)) +
+  labs(
+    title = "Historical vs Monte Carlo Simulated Return Distribution",
+    subtitle = "Max Sharpe Portfolio: comparing observed daily returns to 10,000 simulated draws",
+    x = "Daily Portfolio Return",
+    y = "Density"
+  ) +
+  theme_quant()
+```
+
+```{r}
+# Historical Stress Scenario Windows (short, non-overlapping, event-anchored)
+covid_crash_window     <- "2020-02-19/2020-03-23"  # Global equity market top to COVID-19 bottom
+tech_selloff_window    <- "2021-11-19/2022-01-27"  # Initial growth-stock de-rating, pre-Fed-hike
+crypto_winter_window   <- "2022-05-05/2022-05-13"  # Terra/Luna collapse window
+fed_hike_window        <- "2022-06-08/2022-06-16"  # CPI-triggered selloff into June FOMC 75bp hike
+
+# Helper: true close-to-close cumulative return per asset over a window,
+# compounded from the carried simple-return series (ret_smp). Since ret_smp
+# has no NA gaps, this captures the full move instead of skipping gap days
+# (unlike the previous log-return + na.rm approach, which understated
+# MER/AEV shocks by skipping the exact days the price gap happened on).
+calc_window_shock <- function(ret_xts, date_range) {
+  window_returns <- ret_xts[date_range]
+  sapply(window_returns, function(col) prod(1 + col, na.rm = TRUE) - 1)
+}
+
+# Compute actual shocks per asset for each historical scenario
+shock_covid   <- calc_window_shock(ret_smp, covid_crash_window)
+shock_tech    <- calc_window_shock(ret_smp, tech_selloff_window)
+shock_crypto  <- calc_window_shock(ret_smp, crypto_winter_window)
+shock_fed     <- calc_window_shock(ret_smp, fed_hike_window)
+
+# Hypothetical Black Swan: 1.5x the worst-observed shock per asset across the 4 historical scenarios
+worst_observed   <- pmin(shock_covid, shock_crypto, shock_fed, shock_tech)
+shock_black_swan <- worst_observed * 1.5
+
+# Assemble stress_scenarios from real computed values
+stress_scenarios <- tibble(
+  Scenario = c("2020 COVID Crash", "2022 Crypto Winter", "Fed Rate Hike Shock",
+               "Tech Sector Selloff", "Hypothetical Black Swan"),
+  TEL  = c(shock_covid["TEL"],  shock_crypto["TEL"],  shock_fed["TEL"],  shock_tech["TEL"],  shock_black_swan["TEL"]),
+  MER  = c(shock_covid["MER"],  shock_crypto["MER"],  shock_fed["MER"],  shock_tech["MER"],  shock_black_swan["MER"]),
+  AEV  = c(shock_covid["AEV"],  shock_crypto["AEV"],  shock_fed["AEV"],  shock_tech["AEV"],  shock_black_swan["AEV"]),
+  NVDA = c(shock_covid["NVDA"], shock_crypto["NVDA"], shock_fed["NVDA"], shock_tech["NVDA"], shock_black_swan["NVDA"]),
+  META = c(shock_covid["META"], shock_crypto["META"], shock_fed["META"], shock_tech["META"], shock_black_swan["META"]),
+  BTC  = c(shock_covid["BTC"],  shock_crypto["BTC"],  shock_fed["BTC"],  shock_tech["BTC"],  shock_black_swan["BTC"])
+)
+```
+
+```{r}
+# Compute portfolio-level impact for each scenario under both GMV and Max Sharpe weights
+stress_impact_df <- stress_scenarios %>%
+  rowwise() %>%
+  mutate(
+    shock_vec        = list(c(TEL, MER, AEV, NVDA, META, BTC)),
+    GMV_Impact       = sum(unlist(shock_vec) * w_gmv[c("TEL","MER","AEV","NVDA","META","BTC")]),
+    MaxSharpe_Impact = sum(unlist(shock_vec) * w_sharpe[c("TEL","MER","AEV","NVDA","META","BTC")])
+  ) %>%
+  ungroup() %>%
+  dplyr::select(Scenario, GMV_Impact, MaxSharpe_Impact)
+```
+
+```{r}
+#| label: tbl-stress-summary
+#| tbl-cap: "Portfolio Impact Under Stress Scenarios"
+
+stress_summary_df <- stress_impact_df %>%
+  mutate(
+    GMV_Impact = sprintf("%.2f%%", GMV_Impact * 100),
+    MaxSharpe_Impact = sprintf("%.2f%%", MaxSharpe_Impact * 100)
+  ) %>%
+  rename(`GMV Portfolio Impact` = GMV_Impact, `Max Sharpe Portfolio Impact` = MaxSharpe_Impact)
+
+safe_kable(stress_summary_df, caption = "Portfolio Impact Under Stress Scenarios")
+```
+
+```{r}
+#| label: fig-stress-test
+#| fig.cap: "Portfolio Value Impact Across Stress Scenarios"
+#| fig.width: 8
+#| fig.height: 5
+
+stress_long_df <- stress_impact_df %>%
+  pivot_longer(cols = c(GMV_Impact, MaxSharpe_Impact), names_to = "Portfolio", values_to = "Impact") %>%
+  mutate(Portfolio = ifelse(Portfolio == "GMV_Impact", "GMV", "Max Sharpe"))
+
+ggplot(stress_long_df, aes(x = reorder(Scenario, Impact), y = Impact, fill = Portfolio)) +
+  geom_col(position = "dodge") +
+  coord_flip() +
+  scale_y_continuous(labels = label_percent(accuracy = 1)) +
+  scale_fill_manual(values = c("GMV" = "#1F2E7A", "Max Sharpe" = "#E3120B")) +
+  labs(
+    title = "Portfolio Impact Under Stress Scenarios",
+    subtitle = "Simulated instantaneous shock to portfolio value, GMV vs Max Sharpe weighting",
+    x = NULL,
+    y = "Portfolio Return Impact"
+  ) +
+  theme_quant()
 ```
 
 # Executive Investment Recommendation
