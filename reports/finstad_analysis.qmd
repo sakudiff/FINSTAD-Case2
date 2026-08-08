@@ -583,9 +583,14 @@ ggplot(weights_bnh_df, aes(x = Date, y = Weight, fill = Asset)) +
 # Portfolio Optimization (Efficient Frontier, GMV, Max Sharpe)
 
 ```{r portfolio-optimization}
-# Annualize mean returns and covariance matrix from daily log returns
-mu_ann    <- colMeans(asset_returns_xts) * 252
-Sigma_ann <- cov(asset_returns_xts) * 252
+# Build a single simple-return basis from the carried (gap-filled) log-return
+# series, consistent with the rest of the report — Portfolio Construction also
+# converts carried log returns to simple returns before Return.portfolio.
+ret_smp <- exp(returns_xts_carried) - 1
+
+# Annualize mean returns and covariance matrix from this shared basis
+mu_ann    <- colMeans(ret_smp, na.rm = TRUE) * 252
+Sigma_ann <- cov(ret_smp, use = "pairwise.complete.obs") * 252
 
 n_assets    <- length(mu_ann)
 asset_names <- names(mu_ann)
@@ -789,15 +794,16 @@ ggplot(weights_long_df, aes(x = Asset, y = Weight, fill = Asset)) +
 
 ```{r portfolio-risk}
 # Apply GMV and Max Sharpe weights to historical returns (monthly rebalanced,
-# consistent with the rebalancing approach used in Portfolio Construction)
+# consistent with the rebalancing approach used in Portfolio Construction).
+# Uses ret_smp so this shares the same basis as mu_ann/Sigma_ann above.
 port_returns_gmv <- Return.portfolio(
-  R = asset_returns_xts,
+  R = ret_smp,
   weights = w_gmv,
   rebalance_on = "months"
 )
 
 port_returns_sharpe <- Return.portfolio(
-  R = asset_returns_xts,
+  R = ret_smp,
   weights = w_sharpe,
   rebalance_on = "months"
 )
@@ -887,54 +893,7 @@ mc_summary_df <- data.frame(
 safe_kable(mc_summary_df, caption = "Monte Carlo Simulated VaR and Expected Shortfall (10,000 Simulations)")
 ```
 
-```{r}
-# --- Historical Stress Scenario Windows ---
-# Define real calendar date ranges for each crisis, based on documented market events.
-# These slice directly into your actual return series instead of guessing shock magnitudes.
 
-covid_crash_window     <- "2020-02-19/2020-03-23"  # Global equity market top to COVID-19 bottom
-crypto_winter_window   <- "2021-11-10/2022-11-21"  # BTC all-time high to FTX-collapse low
-fed_hike_window        <- "2022-01-01/2022-10-31"  # Aggressive Fed tightening cycle (2022)
-tech_selloff_window    <- "2022-01-01/2022-06-30"  # Nasdaq-heavy growth/tech correction (H1 2022)
-
-# Helper: compute cumulative (peak-to-trough style) return per asset over a given window
-calc_window_shock <- function(returns_xts, date_range) {
-  window_returns <- returns_xts[date_range]
-  # Cumulative return over the window: compounding daily log returns
-  sapply(window_returns, function(col) exp(sum(col, na.rm = TRUE)) - 1)
-}
-
-# Compute actual shocks per asset for each historical scenario
-shock_covid   <- calc_window_shock(asset_returns_xts, covid_crash_window)
-shock_crypto  <- calc_window_shock(asset_returns_xts, crypto_winter_window)
-shock_fed     <- calc_window_shock(asset_returns_xts, fed_hike_window)
-shock_tech    <- calc_window_shock(asset_returns_xts, tech_selloff_window)
-```
-
-```{r}
-# --- Hypothetical Black Swan ---
-# This one is intentionally NOT historical — stress testing frameworks (e.g. Basel,
-# CCAR-style) standardly include a hypothetical scenario worse than anything observed,
-# to test tail risk beyond the historical sample. Here it's constructed as a uniform
-# amplification of the worst historical single-scenario shock per asset, clearly
-# labeled as a hypothetical assumption in the report (not fabricated historical data).
-worst_observed <- pmin(shock_covid, shock_crypto, shock_fed, shock_tech)
-shock_black_swan <- worst_observed * 1.5  # 50% more severe than worst historical case on record
-```
-
-```{r}
-# --- Assemble the stress scenario table from real computed values ---
-stress_scenarios <- tibble(
-  Scenario = c("2020 COVID Crash", "2022 Crypto Winter", "Fed Rate Hike Shock",
-               "Tech Sector Selloff", "Hypothetical Black Swan"),
-  TEL  = c(shock_covid["TEL"],  shock_crypto["TEL"],  shock_fed["TEL"],  shock_tech["TEL"],  shock_black_swan["TEL"]),
-  MER  = c(shock_covid["MER"],  shock_crypto["MER"],  shock_fed["MER"],  shock_tech["MER"],  shock_black_swan["MER"]),
-  AEV  = c(shock_covid["AEV"],  shock_crypto["AEV"],  shock_fed["AEV"],  shock_tech["AEV"],  shock_black_swan["AEV"]),
-  NVDA = c(shock_covid["NVDA"], shock_crypto["NVDA"], shock_fed["NVDA"], shock_tech["NVDA"], shock_black_swan["NVDA"]),
-  META = c(shock_covid["META"], shock_crypto["META"], shock_fed["META"], shock_tech["META"], shock_black_swan["META"]),
-  BTC  = c(shock_covid["BTC"],  shock_crypto["BTC"],  shock_fed["BTC"],  shock_tech["BTC"],  shock_black_swan["BTC"])
-)
-```
 
 ```{r}
 #| label: fig-mc-distribution
@@ -968,23 +927,27 @@ tech_selloff_window    <- "2021-11-19/2022-01-27"  # Initial growth-stock de-rat
 crypto_winter_window   <- "2022-05-05/2022-05-13"  # Terra/Luna collapse window
 fed_hike_window        <- "2022-06-08/2022-06-16"  # CPI-triggered selloff into June FOMC 75bp hike
 
-# Helper: compute cumulative (peak-to-trough style) return per asset over a given window
-calc_window_shock <- function(returns_xts, date_range) {
-  window_returns <- returns_xts[date_range]
-  sapply(window_returns, function(col) exp(sum(col, na.rm = TRUE)) - 1)
+# Helper: true close-to-close cumulative return per asset over a window,
+# compounded from the carried simple-return series (ret_smp). Since ret_smp
+# has no NA gaps, this captures the full move instead of skipping gap days
+# (unlike the previous log-return + na.rm approach, which understated
+# MER/AEV shocks by skipping the exact days the price gap happened on).
+calc_window_shock <- function(ret_xts, date_range) {
+  window_returns <- ret_xts[date_range]
+  sapply(window_returns, function(col) prod(1 + col, na.rm = TRUE) - 1)
 }
 
 # Compute actual shocks per asset for each historical scenario
-shock_covid   <- calc_window_shock(asset_returns_xts, covid_crash_window)
-shock_tech    <- calc_window_shock(asset_returns_xts, tech_selloff_window)
-shock_crypto  <- calc_window_shock(asset_returns_xts, crypto_winter_window)
-shock_fed     <- calc_window_shock(asset_returns_xts, fed_hike_window)
+shock_covid   <- calc_window_shock(ret_smp, covid_crash_window)
+shock_tech    <- calc_window_shock(ret_smp, tech_selloff_window)
+shock_crypto  <- calc_window_shock(ret_smp, crypto_winter_window)
+shock_fed     <- calc_window_shock(ret_smp, fed_hike_window)
 
 # Hypothetical Black Swan: 1.5x the worst-observed shock per asset across the 4 historical scenarios
 worst_observed   <- pmin(shock_covid, shock_crypto, shock_fed, shock_tech)
 shock_black_swan <- worst_observed * 1.5
 
-# Rebuild stress_scenarios from REAL computed values (replaces the fabricated tribble)
+# Assemble stress_scenarios from real computed values
 stress_scenarios <- tibble(
   Scenario = c("2020 COVID Crash", "2022 Crypto Winter", "Fed Rate Hike Shock",
                "Tech Sector Selloff", "Hypothetical Black Swan"),
@@ -1010,7 +973,6 @@ stress_impact_df <- stress_scenarios %>%
   dplyr::select(Scenario, GMV_Impact, MaxSharpe_Impact)
 ```
 
-TEL, MER, and AEV showed relatively limited daily price variation throughout large portions of the sample period, which is consistent with the zero-valued median and interquartile range reported in the descriptive statistics in Section 3. Consequently, the stress shock estimates for these three assets, particularly AEV, may not fully reflect their actual responses during historical crisis periods. This data limitation should therefore be considered when interpreting the results.
 ```{r}
 #| label: tbl-stress-summary
 #| tbl-cap: "Portfolio Impact Under Stress Scenarios"
