@@ -97,7 +97,7 @@ library(kableExtra)
 
 # Data Ingestion and Preparation
 
-Load the compiled master dataset containing historical daily close prices for Group 3's asset universe (TEL, MER, AEV, NVDA, META, BTC, SPY) and the risk-free rate benchmark over the sample period (January 2, 2020 -- December 31, 2025).
+Load the compiled master dataset containing historical daily close prices for Group 3's asset universe (TEL, MER, AEV, NVDA, META, BTC, SPY) and the risk-free rate benchmark over the sample period (January 2, 2020 -- January 2, 2026).
 
 ```{r data-ingestion}
 # Define path to master dataset
@@ -120,7 +120,6 @@ Compute daily log returns for all portfolio assets and the benchmark:
 $$r_{i,t} = \ln\left(\frac{P_{i,t}}{P_{i,t-1}}\right)$$
 
 ```{r return-computation}
-# Sort chronologically by date
 prices_df <- raw_data %>%
   mutate(Date = as.Date(Date)) %>%
   arrange(Date)
@@ -132,7 +131,6 @@ asset_cols <- c("TEL", "MER", "AEV", "NVDA", "META", "BTC", "SPY")
 prices_mat <- as.matrix(prices_df[, asset_cols])
 prices_xts <- xts(prices_mat, order.by = prices_df[["Date"]])
 
-# Compute daily log returns
 returns_xts <- Return.calculate(prices_xts, method = "log")[-1, ]
 
 # Separate portfolio assets from benchmark
@@ -141,6 +139,20 @@ benchmark_asset <- "SPY"
 
 asset_returns_xts <- returns_xts[, portfolio_assets]
 benchmark_returns_xts <- returns_xts[, benchmark_asset]
+
+# No-trade days carry the last price mark, so the resumption-day return
+# captures the full move across the gap. Wealth indexes use exp(cumsum(r))
+# because these are log returns; cumprod(1 + r) would misstate growth.
+prices_carried <- na.locf(prices_xts)
+returns_xts_carried <- Return.calculate(prices_carried, method = "log")[-1, ]
+asset_returns_carried <- returns_xts_carried[, portfolio_assets]
+
+# EDA series: carried returns with no-trade days set back to NA, so
+# resumption-day returns (full gap moves) enter the moments, correlations,
+# and distribution figures while no-trade days stay missing.
+returns_xts_eda <- returns_xts_carried
+returns_xts_eda[is.na(prices_xts[-1, ])] <- NA
+asset_returns_eda <- returns_xts_eda[, portfolio_assets]
 
 # Risk-free rate (convert annual T-Bill rate to daily log-equivalent rate)
 rf_annual <- mean(prices_df[["RF_Rate"]], na.rm = TRUE)
@@ -160,9 +172,19 @@ Verify data integrity, check for missing values, and print head records of retur
 #| label: tbl-data-validation
 #| tbl-cap: "First 6 Days of Asset Daily Log Returns (2020)"
 
-# Verify no missing values in returns time series
+# Missing days are expected for MER and AEV: Philippine holidays and genuine
+# PSE closures on US trading days, plus one captured-data gap (2022-10-24).
+# The ingestion script stores them as NA instead of carrying the last close,
+# so no-trade days never become fake 0 returns.
 missing_summary <- colSums(is.na(returns_xts))
-stopifnot(all(missing_summary == 0))
+notrade_summary <- colSums(is.na(returns_xts_eda))
+cat("Missing return days per asset (raw gap-boundary convention):\n")
+print(missing_summary)
+cat("No-trade days per asset (gap-aware convention):\n")
+print(notrade_summary)
+if (any(missing_summary > 0)) {
+  message("Missing return days present; verify no-trade day treatment in data acquisition")
+}
 
 # Format first 6 rows for table display
 returns_head_df <- as.data.frame(head(returns_xts)) %>%
@@ -177,10 +199,9 @@ kbl(returns_head_df, booktabs = TRUE, align = "c") %>%
 
 ```{r}
 #| label: tbl-exploratory-stats
-#| tbl-cap: "Descriptive Statistics for Portfolio Assets (2020--2025)"
+#| tbl-cap: "Descriptive Statistics for Portfolio Assets (Jan 2, 2020 -- Jan 2, 2026)"
 
-# Compute descriptive statistics
-stats_mat <- table.Stats(asset_returns_xts)
+stats_mat <- table.Stats(asset_returns_eda)
 
 # Convert to data frame for clean rendering
 stats_df <- as.data.frame(stats_mat) %>%
@@ -229,12 +250,12 @@ theme_quant <- function() {
 
 ```{r}
 #| label: fig-ts-returns
-#| fig.cap: "Daily Log Return Trajectories Across Portfolio Universe (2020--2025)"
+#| fig.cap: "Daily Log Return Trajectories Across Portfolio Universe (Jan 2020 -- Jan 2026)"
 #| fig.width: 8
 #| fig.height: 6
 
 # Reshape returns for tidy plotting
-returns_tidy <- as.data.frame(returns_xts) %>%
+returns_tidy <- as.data.frame(returns_xts_eda) %>%
   rownames_to_column(var = "Date") %>%
   mutate(Date = as.Date(Date)) %>%
   pivot_longer(-Date, names_to = "Asset", values_to = "Return") %>%
@@ -248,7 +269,7 @@ ggplot(returns_tidy, aes(x = Date, y = Return, color = Asset)) +
   scale_x_date(date_labels = "%Y", date_breaks = "2 years") +
   labs(
     title = "Daily Log Return Dynamics and Volatility Clustering",
-    subtitle = "Sample Period: January 2, 2020 through December 31, 2025",
+    subtitle = "Sample Period: January 2, 2020 through January 2, 2026",
     x = NULL,
     y = "Daily Log Return"
   ) +
@@ -332,7 +353,7 @@ ggplot(returns_tidy, aes(sample = Return)) +
   theme_quant()
 ```
 
-## Return Dispersion & Extreme Outlier Comparison
+## Dispersion of Daily Returns and Outlier Diagnostics
 
 ```{r}
 #| label: fig-boxplots
@@ -358,12 +379,11 @@ ggplot(returns_tidy, aes(x = Asset, y = Return, fill = Asset)) +
 
 ```{r}
 #| label: fig-cum-returns
-#| fig.cap: "Cumulative Growth Trajectories of USD 1.00 Investment (2020--2025)"
+#| fig.cap: "Cumulative Growth Trajectories of USD 1.00 Investment (Jan 2020 -- Jan 2026)"
 #| fig.width: 8
 #| fig.height: 4.8
 
-# Compute cumulative wealth index
-cum_returns_df <- as.data.frame(cumprod(1 + returns_xts)) %>%
+cum_returns_df <- as.data.frame(exp(cumsum(returns_xts_carried))) %>%
   rownames_to_column(var = "Date") %>%
   mutate(Date = as.Date(Date)) %>%
   pivot_longer(-Date, names_to = "Asset", values_to = "Wealth") %>%
@@ -376,7 +396,7 @@ ggplot(cum_returns_df, aes(x = Date, y = Wealth, color = Asset)) +
   scale_x_date(date_labels = "%Y", date_breaks = "1 year") +
   labs(
     title = "Cumulative Wealth Index Growth Trajectories (Log Scale)",
-    subtitle = "Hypothetical USD 1.00 investment performance from January 2020 to December 2025",
+    subtitle = "Hypothetical USD 1.00 investment performance from January 2020 to January 2026",
     x = NULL,
     y = "Wealth Index (USD)"
   ) +
@@ -389,8 +409,7 @@ ggplot(cum_returns_df, aes(x = Date, y = Wealth, color = Asset)) +
 #| label: fig-correlation-matrix
 #| fig.cap: "Asset Return Correlation Heatmap (Group 3 Universe)"
 
-# Compute pairwise correlation matrix
-cor_matrix <- cor(asset_returns_xts, use = "pairwise.complete.obs")
+cor_matrix <- cor(returns_xts_eda, use = "pairwise.complete.obs")
 
 # Render correlation heatmap
 corrplot(
@@ -409,13 +428,19 @@ corrplot(
 This section evaluates the performance of equal-weighted asset allocations under two distinct execution regimes: a static Buy-and-Hold strategy and a disciplined Monthly Rebalanced strategy. The 6-asset portfolio universe (TEL, MER, AEV, NVDA, META, BTC) starts with equal baseline weights ($w_i = 1/6 \approx 16.67\%$) on January 2, 2020 and is benchmarked against the SPDR S&P 500 ETF Trust (SPY).
 
 ```{r portfolio-construction-calc}
+# Simple (arithmetic) returns: a weighted sum of log returns is not the
+# portfolio return, so Return.portfolio and all portfolio metrics below
+# operate on simple returns converted from the carried log series.
+ret_smp <- exp(returns_xts_carried) - 1
+asset_returns_smp <- ret_smp[, portfolio_assets]
+
 # Equal weight allocation vector across the 6 portfolio assets
 w_eq <- rep(1 / 6, 6)
-names(w_eq) <- colnames(asset_returns_xts)
+names(w_eq) <- colnames(asset_returns_smp)
 
 # Strategy 1: Buy-and-Hold Equal-Weighted Portfolio
 port_bnh <- Return.portfolio(
-  R = asset_returns_xts,
+  R = asset_returns_smp,
   weights = w_eq,
   verbose = TRUE
 )
@@ -424,7 +449,7 @@ weights_bnh <- port_bnh$EOP.Weight
 
 # Strategy 2: Monthly Rebalanced Equal-Weighted Portfolio
 port_reb <- Return.portfolio(
-  R = asset_returns_xts,
+  R = asset_returns_smp,
   weights = w_eq,
   rebalance_on = "months",
   verbose = TRUE
@@ -437,10 +462,12 @@ rf_annual <- 0.0525
 rf_daily <- log(1 + rf_annual) / 252
 
 # Performance evaluation helper function
+# cum = prod(1+r)-1, CAGR = (1+cum)^(252/n)-1, vol = sd(r)*sqrt(252)
 eval_portfolio <- function(r_series, name) {
-  cum_ret <- exp(sum(r_series)) - 1
-  ann_ret <- as.numeric(Return.annualized(r_series, geometric = TRUE))
-  ann_sd  <- as.numeric(StdDev.annualized(r_series))
+  cum_ret <- as.numeric(tail(cumprod(1 + r_series), 1)) - 1
+  n_obs   <- length(r_series)
+  ann_ret <- (1 + cum_ret)^(252 / n_obs) - 1
+  ann_sd  <- sd(as.numeric(r_series)) * sqrt(252)
   sharpe  <- (ann_ret - rf_annual) / ann_sd
   max_dd  <- as.numeric(maxDrawdown(r_series))
   
@@ -458,7 +485,7 @@ eval_portfolio <- function(r_series, name) {
 perf_summary_df <- rbind(
   eval_portfolio(r_bnh, "Equal-Weight (Buy & Hold)"),
   eval_portfolio(r_reb, "Equal-Weight (Monthly Rebalanced)"),
-  eval_portfolio(returns_xts[, "SPY"], "SPDR S&P 500 ETF (SPY Benchmark)")
+  eval_portfolio(ret_smp[, "SPY"], "SPDR S&P 500 ETF (SPY Benchmark)")
 )
 ```
 
@@ -466,9 +493,9 @@ perf_summary_df <- rbind(
 
 ```{r}
 #| label: tbl-portfolio-performance
-#| tbl-cap: "Portfolio Performance Summary Comparison (2020--2025)"
+#| tbl-cap: "Portfolio Performance Summary Comparison (Jan 2, 2020 -- Jan 2, 2026)"
 
-safe_kable(perf_summary_df, caption = "Portfolio Performance Summary Comparison (2020--2025)")
+safe_kable(perf_summary_df, caption = "Portfolio Performance Summary Comparison (Jan 2, 2020 -- Jan 2, 2026)")
 ```
 
 ## Cumulative Portfolio Growth Comparison
@@ -479,11 +506,10 @@ safe_kable(perf_summary_df, caption = "Portfolio Performance Summary Comparison 
 #| fig.width: 8
 #| fig.height: 5
 
-# Merge portfolio return series
-port_returns_combined <- cbind(r_bnh, r_reb, returns_xts[, "SPY"])
+# Merge portfolio return series (all simple returns)
+port_returns_combined <- cbind(r_bnh, r_reb, ret_smp[, "SPY"])
 colnames(port_returns_combined) <- c("Buy_Hold", "Monthly_Rebalanced", "SPY_Benchmark")
 
-# Compute cumulative wealth index
 port_growth_df <- as.data.frame(cumprod(1 + port_returns_combined)) %>%
   rownames_to_column(var = "Date") %>%
   mutate(Date = as.Date(Date)) %>%
@@ -514,7 +540,7 @@ ggplot(port_growth_df, aes(x = Date, y = Wealth, color = Strategy, linetype = St
   scale_x_date(date_labels = "%Y", date_breaks = "1 year") +
   labs(
     title = "Cumulative Wealth Growth Comparison (Log Scale)",
-    subtitle = "Performance of USD 1.00 allocation from January 2020 through December 2025",
+    subtitle = "Performance of USD 1.00 allocation from January 2020 through January 2026",
     x = NULL,
     y = "Wealth Index (USD)"
   ) +
@@ -543,7 +569,7 @@ ggplot(weights_bnh_df, aes(x = Date, y = Weight, fill = Asset)) +
   scale_x_date(date_labels = "%Y", date_breaks = "1 year") +
   labs(
     title = "Asset Allocation Drift in Buy-and-Hold Execution",
-    subtitle = "Evolution of asset weights driven by differential market performance (2020--2025)",
+    subtitle = "Evolution of asset weights driven by differential market performance (Jan 2020 -- Jan 2026)",
     x = NULL,
     y = "Portfolio Weight Share"
   ) +
