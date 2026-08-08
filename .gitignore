@@ -4,3 +4,17 @@ reports/*_files/
 .RData
 .Rhistory
 .Rproj.user/
+# R / RStudio
+.Rhistory
+.Rapp.history
+.RData
+.Ruserdata
+.Rproj.user/
+*.Rproj
+
+# knitr / R Markdown output
+*_cache/
+*_files/
+*.knit.md
+*.utf8.md
+:
