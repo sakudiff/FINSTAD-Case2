@@ -1,9 +1,3 @@
-reports/*.pdf
-reports/*.tex
-reports/*_files/
-.RData
-.Rhistory
-.Rproj.user/
 # R / RStudio
 .Rhistory
 .Rapp.history
@@ -17,4 +11,25 @@ reports/*_files/
 *_files/
 *.knit.md
 *.utf8.md
-:
+
+# Data files (track selectively)
+*.RData
+*.rds
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+
+# Rendered output (keep source, not compiled)
+*.log
+*.aux
+*.out
+*.synctex.gz
+reports/finstad_analysis.tex
+.pi-subagents
+R/__pycache__
+.Rprofile
