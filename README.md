@@ -27,6 +27,7 @@ Group 3 Charlie evaluates the following seven asset classes over the sample peri
 | Portfolio Risk Assessment | Team (Josiah) | Scheduled | TBD |
 | Executive Investment Recommendation | Iñigo | Scheduled | TBD |
 | Introduction | Iñigo | Scheduled | TBD |
+| Conclusion | Camille | Scheduled | TBD |
 | Executive Presentation | Team | Scheduled | TBD |
 
 ## Workspace Directory Layout
