@@ -583,14 +583,8 @@ ggplot(weights_bnh_df, aes(x = Date, y = Weight, fill = Asset)) +
 # Portfolio Optimization (Efficient Frontier, GMV, Max Sharpe)
 
 ```{r portfolio-optimization}
-# Build a single simple-return basis from the carried (gap-filled) log-return
-# series, consistent with the rest of the report — Portfolio Construction also
-# converts carried log returns to simple returns before Return.portfolio.
-ret_smp <- exp(returns_xts_carried) - 1
-
-# Annualize mean returns and covariance matrix from this shared basis
-mu_ann    <- colMeans(ret_smp, na.rm = TRUE) * 252
-Sigma_ann <- cov(ret_smp, use = "pairwise.complete.obs") * 252
+mu_ann    <- colMeans(asset_returns_smp, na.rm = TRUE) * 252
+Sigma_ann <- cov(asset_returns_smp, use = "pairwise.complete.obs") * 252
 
 n_assets    <- length(mu_ann)
 asset_names <- names(mu_ann)
@@ -680,37 +674,39 @@ sharpe_val <- (sharpe_ret - rf_annual) / sharpe_sd
 ```
 
 ```{r}
-# --- Efficient Frontier: sweep target returns, minimize variance at each one ---
+# --- Efficient Frontier: sweep target returns, solve exact QP at each one ---
+# This is a quadratic program (quadratic objective, linear constraints) with
+# one unique global optimum per target -- nloptr/SLSQP with numerical
+# (finite-difference) gradients was landing on feasible-but-suboptimal
+# points for some targets, producing the sawtooth. Solving the exact QP via
+# quadprog removes gradient approximation error entirely.
+library(quadprog)
+
 target_returns <- seq(min(mu_ann), max(mu_ann), length.out = 50)
 frontier_list  <- vector("list", length(target_returns))
+
+# solve.QP minimizes 0.5*w'Dw - d'w subject to t(Amat)%*%w >= bvec,
+# with the first `meq` constraints treated as equalities.
+D <- 2 * Sigma_ann + diag(1e-6, n_assets)  # was 1e-8
+d <- rep(0, n_assets)
 
 for (i in seq_along(target_returns)) {
   target <- target_returns[i]
 
-  # Two equality constraints at this point: weights sum to 1, AND portfolio return hits target
-  eval_g_eq_frontier <- function(w) {
-    c(sum(w) - 1, sum(w * mu_ann) - target)
-  }
-  eval_jac_g_eq_frontier <- function(w) {
-    nl.jacobian(w, eval_g_eq_frontier)
-  }
+  Amat <- cbind(
+    rep(1, n_assets),  # sum(w) = 1
+    mu_ann,            # sum(w * mu_ann) = target
+    diag(n_assets),    # w >= 0
+    -diag(n_assets)    # -w >= -1  (i.e. w <= 1)
+  )
+  bvec <- c(1, target, rep(0, n_assets), rep(-1, n_assets))
 
   sol <- tryCatch(
-    nloptr(
-      x0            = w0,
-      eval_f        = eval_f_var,
-      eval_grad_f   = eval_grad_f_var,
-      lb            = rep(0, n_assets),
-      ub            = rep(1, n_assets),
-      eval_g_eq     = eval_g_eq_frontier,
-      eval_jac_g_eq = eval_jac_g_eq_frontier,
-      opts          = opt_settings
-    ),
+    quadprog::solve.QP(Dmat = D, dvec = d, Amat = Amat, bvec = bvec, meq = 2),
     error = function(e) NULL
   )
 
-  # Only keep the point if the solver actually converged
-  if (!is.null(sol) && sol$status >= 0) {
+  if (!is.null(sol)) {
     w_i <- sol$solution
     frontier_list[[i]] <- data.frame(
       Target_Return = target,
@@ -729,8 +725,10 @@ efficient_frontier_df <- bind_rows(frontier_list)
 #| fig.width: 8
 #| fig.height: 5
 
-ggplot(efficient_frontier_df, aes(x = Risk, y = Return)) +
-  geom_line(color = "#1F2E7A", linewidth = 0.9) +
+efficient_only_df <- efficient_frontier_df[efficient_frontier_df$Return >= gmv_ret, ]
+
+ggplot(efficient_only_df, aes(x = Risk, y = Return)) +
+  geom_path(color = "#1F2E7A", linewidth = 0.9) +
   geom_point(
     data = data.frame(Risk = gmv_sd, Return = gmv_ret),
     aes(x = Risk, y = Return), color = "#E3120B", size = 3
@@ -793,17 +791,14 @@ ggplot(weights_long_df, aes(x = Asset, y = Weight, fill = Asset)) +
 # Portfolio Risk Assessment (VaR, CVaR, Monte Carlo, Stress Testing)
 
 ```{r portfolio-risk}
-# Apply GMV and Max Sharpe weights to historical returns (monthly rebalanced,
-# consistent with the rebalancing approach used in Portfolio Construction).
-# Uses ret_smp so this shares the same basis as mu_ann/Sigma_ann above.
 port_returns_gmv <- Return.portfolio(
-  R = ret_smp,
+  R = asset_returns_smp,
   weights = w_gmv,
   rebalance_on = "months"
 )
 
 port_returns_sharpe <- Return.portfolio(
-  R = ret_smp,
+  R = asset_returns_smp,
   weights = w_sharpe,
   rebalance_on = "months"
 )
