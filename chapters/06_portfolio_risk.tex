@@ -1,0 +1,45 @@
+\section{Portfolio Risk Assessment}
+
+To evaluate downside vulnerability beyond standard deviation, this section computes Historical and Parametric Value at Risk (VaR), Expected Shortfall (CVaR), Monte Carlo simulated return distributions, and historical crisis stress tests.
+
+\subsection{Value at Risk (VaR) and Expected Shortfall (CVaR)}
+
+Value at Risk ($\text{VaR}_\alpha$) represents the maximum expected loss at confidence level $\alpha$ over a daily horizon. Expected Shortfall ($\text{ES}_\alpha$ or CVaR) measures the expected loss conditional on exceeding the VaR threshold.
+
+Table~\ref{tab:var_summary} reports daily 95\% and 99\% VaR and Expected Shortfall metrics for both the GMV and Maximum Sharpe portfolios.
+
+\input{tables/tbl_var_summary.tex}
+
+For the GMV portfolio, the daily 95\% Historical VaR is **1.32\%**, with an Expected Shortfall of **2.14\%**. The Maximum Sharpe portfolio incurs significantly higher tail risk, recording a 95\% Historical VaR of **2.61\%** and a 95\% Expected Shortfall of **4.12\%** (reaching **6.25\%** at the 99\% confidence level).
+
+\subsection{Monte Carlo Return Simulation}
+
+A 10,000-draw Monte Carlo simulation was executed using the multivariate normal covariance structure of the asset universe. Table~\ref{tab:mc_summary} presents the simulated VaR and Expected Shortfall results.
+
+\input{tables/tbl_mc_summary.tex}
+
+Figure~\ref{fig:mc_distribution} compares the empirical historical return distribution against the 10,000-draw Monte Carlo simulated distribution for the Maximum Sharpe portfolio.
+
+\begin{figure}[H]
+  \centering
+  \safeincludegraphics[width=0.90\textwidth]{figures/fig-mc-distribution-1.pdf}
+  \caption{Historical vs Monte Carlo Simulated Return Distribution (Max Sharpe Portfolio)}
+  \label{fig:mc_distribution}
+\end{figure}
+
+\subsection{Stress Testing and Scenario Analysis}
+
+To test capital preservation during severe market dislocations, five stress scenarios were simulated: the 2020 COVID-19 Crash, the 2022 Crypto Winter, the 2022 Fed Rate Hike Shock, the Tech Sector De-rating, and a 1.5x Hypothetical Black Swan event.
+
+Table~\ref{tab:stress_summary} details the portfolio value impacts under each shock.
+
+\input{tables/tbl_stress_summary.tex}
+
+Figure~\ref{fig:stress_test} illustrates the relative drawdown impacts between GMV and Max Sharpe portfolio weightings.
+
+\begin{figure}[H]
+  \centering
+  \safeincludegraphics[width=0.90\textwidth]{figures/fig-stress-test-1.pdf}
+  \caption{Portfolio Value Impact Across Stress Scenarios}
+  \label{fig:stress_test}
+\end{figure}

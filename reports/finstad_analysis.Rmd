@@ -8,43 +8,33 @@ author:
   - "SEECHUNG, Camille Castro"
   - "SISON, Aaron Joshua Estacio"
 date: "August 17, 2026"
-format:
-  pdf:
-    pdf-engine: pdflatex
+output:
+  pdf_document:
     toc: true
-    toc-depth: 3
-    number-sections: true
-    colorlinks: true
-    documentclass: article
-    classoption: 12pt
-    geometry:
-      - margin=1in
-    fontsize: 11pt
-    code-block-font-size: small
-    highlight-style: arrow
-    keep-tex: true
-include-in-header:
-  - text: |
-      \usepackage{fvextra}
-      \fvset{breaklines=true,breakanywhere=true}
-      \RecustomVerbatimEnvironment{Highlighting}{Verbatim}{breaklines=true,breakanywhere=true,commandchars=\\\{\}}
-      \let\verbatim\Verbatim
-      \let\endverbatim\endVerbatim
-      \usepackage{microtype}
-      \usepackage{adjustbox}
-      \usepackage{booktabs}
-      \usepackage{tabularx}
-      \usepackage{pdflscape}
-      \usepackage{float}
-      \usepackage{ragged2e}
-      \usepackage{csquotes}
-      \clubpenalty=10000
-      \widowpenalty=10000
-      \displaywidowpenalty=10000
-      \sloppy
-execute:
-  warning: false
-  message: false
+    toc_depth: 3
+    number_sections: true
+    keep_tex: true
+    latex_engine: pdflatex
+geometry: margin=1in
+fontsize: 11pt
+header-includes:
+  - \usepackage{fvextra}
+  - \fvset{breaklines=true,breakanywhere=true}
+  - \RecustomVerbatimEnvironment{Highlighting}{Verbatim}{breaklines=true,breakanywhere=true,commandchars=\\\{\}}
+  - \let\verbatim\Verbatim
+  - \let\endverbatim\endVerbatim
+  - \usepackage{microtype}
+  - \usepackage{adjustbox}
+  - \usepackage{booktabs}
+  - \usepackage{tabularx}
+  - \usepackage{pdflscape}
+  - \usepackage{float}
+  - \usepackage{ragged2e}
+  - \usepackage{csquotes}
+  - \clubpenalty=10000
+  - \widowpenalty=10000
+  - \displaywidowpenalty=10000
+  - \sloppy
 ---
 
 ```{r setup, include=FALSE}
@@ -109,7 +99,7 @@ This quantitative consultation report evaluates portfolio construction, optimiza
 1. **Portfolio Construction & Rebalancing Discipline**: An un-rebalanced Buy-and-Hold equal-weighted strategy delivered high nominal cumulative returns driven by massive asset weight drift into NVDA and BTC. However, monthly rebalancing significantly controlled portfolio volatility (down from 32.4% to 22.8% annualized) and contained peak drawdown (reduced from -61.2% to -48.5%), providing a far superior risk-adjusted profile.
 2. **Mean-Variance Portfolio Optimization**:
    - **Global Minimum Variance (GMV)**: Heavily allocates to low-beta domestic equities (TEL: 39.8%, AEV: 31.9%, MER: 24.8%) with zero allocation to BTC and minimal international tech exposure. GMV achieves an annualized volatility of **14.28%** and a Sharpe ratio of **0.2917**.
-   - **Maximum Sharpe Ratio (Tangency Portfolio)**: Concentrates heavily in high-performing international growth engines (NVDA: 58.4%, META: 22.6%, MER: 19.0%), yielding an annualized return of **49.82%**, volatility of **32.14%**, and a industry-leading Sharpe ratio of **1.3868**.
+   - **Maximum Sharpe Ratio (Tangency Portfolio)**: Concentrates heavily in high-performing international growth engines (NVDA: 58.4%, META: 19.0%, MER: 22.6%), yielding an annualized return of **49.82%**, volatility of **32.14%**, and an industry-leading Sharpe ratio of **1.3868**.
 3. **Tail Risk & Stress Testing Resilience**: 
    - Daily 95% Historical Value at Risk (VaR) ranges from **-1.32%** (GMV) to **-2.61%** (Max Sharpe), while 95% Historical Expected Shortfall (CVaR) reaches **-2.14%** (GMV) and **-4.12%** (Max Sharpe).
    - Under historical crisis simulations (2020 COVID Crash, 2022 Crypto Winter, 2022 Fed Rate Hike), the GMV portfolio demonstrates exceptional resilience (maximum shock loss of -13.8%), whereas the Max Sharpe portfolio incurs severe instantaneous drawdowns (-29.8% in COVID crash, -44.7% in a 1.5x Black Swan event).
@@ -1040,7 +1030,7 @@ Based on rigorous quantitative evaluation of Group 3's asset universe over the 2
 ### 1. Core-Satellite Allocation Framework
 
 We recommend establishing a **60% Max Sharpe / 40% GMV Hybrid Portfolio**. 
-- **Rationale**: Relying solely on the Maximum Sharpe portfolio creates heavy concentration in NVDA (58.4%) and META (22.6%), exposing the fund to severe single-stock drawdown risk (-29.8% in COVID crash, -44.7% in Black Swan). Blending 40% GMV introduces stabilizing domestic equities (TEL, MER, AEV), dampening portfolio volatility from 32.14% down to ~21.5% while maintaining an attractive target annual return of ~33.5% (Sharpe Ratio ~1.05).
+- **Rationale**: Relying solely on the Maximum Sharpe portfolio creates heavy concentration in NVDA (58.4%) and META (19.0%), exposing the fund to severe single-stock drawdown risk (-29.8% in COVID crash, -44.7% in Black Swan). Blending 40% GMV introduces stabilizing domestic equities (TEL, MER, AEV), dampening portfolio volatility from 32.14% down to ~21.5% while maintaining an attractive target annual return of ~33.5% (Sharpe Ratio ~1.05).
 
 ### 2. Execution Discipline & Rebalancing Frequency
 

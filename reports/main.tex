@@ -1,0 +1,84 @@
+\documentclass[12pt]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{microtype}
+\usepackage{adjustbox}
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{pdflscape}
+\usepackage{float}
+\usepackage{ragged2e}
+\usepackage{csquotes}
+\usepackage{graphicx}
+\usepackage{amsmath,amssymb}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{hyperref}
+
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue,
+    citecolor=blue,
+    urlcolor=blue
+}
+
+\lstset{
+  basicstyle=\ttfamily\footnotesize,
+  breaklines=true,
+  breakatwhitespace=true,
+  frame=single,
+  numbers=left,
+  numberstyle=\tiny\color{gray},
+  keywordstyle=\color{blue},
+  commentstyle=\color{teal},
+  stringstyle=\color{orange}
+}
+
+\newcommand{\safeincludegraphics}[2][]{%
+  \IfFileExists{#2}{\includegraphics[#1]{#2}}{\framebox[\linewidth]{Missing Figure: #2}}%
+}
+
+\title{\textbf{Portfolio Management and Risk Consultation}\\[0.5em]
+\large FINSTAD Case 2 -- Group 3 (Charlie)}
+\author{
+  CRUZ, Ricardo Miguel Iñigo\\
+  GALEDO, Enrique Lorenzo Hermoso\\
+  SEBALLOS, Josiah Dweyn Panganiban\\
+  SEECHUNG, Camille Castro\\
+  SISON, Aaron Joshua Estacio
+}
+\date{August 17, 2026}
+
+\begin{document}
+
+\maketitle
+\tableofcontents
+\newpage
+
+\input{../chapters/01_introduction.tex}
+\newpage
+
+\input{../chapters/02_data_acquisition.tex}
+\newpage
+
+\input{../chapters/03_exploratory_data_analysis.tex}
+\newpage
+
+\input{../chapters/04_portfolio_construction.tex}
+\newpage
+
+\input{../chapters/05_portfolio_optimization.tex}
+\newpage
+
+\input{../chapters/06_portfolio_risk.tex}
+\newpage
+
+\input{../chapters/07_executive_recommendation.tex}
+\newpage
+
+\input{../chapters/08_references.tex}
+\newpage
+
+\input{../chapters/09_appendix.tex}
+
+\end{document}

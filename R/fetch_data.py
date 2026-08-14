@@ -175,8 +175,15 @@ def main() -> None:
     master_df = master_df.loc[master_df['SPY'].notna()].copy()
     master_df = master_df.sort_index()
 
-    # Add Risk-Free Rate column (PH 91-Day T-Bill average ~ 5.25% annual rate, 0.0525)
-    master_df['RF_Rate'] = 0.0525
+    # Add Risk-Free Rate column (Ingest raw PH 91-Day T-Bill secondary market series from BSP/BTr)
+    tbill_path = os.path.join(DATA_DIR, "PH_91D_TBill.csv")
+    if os.path.exists(tbill_path):
+        tbill_df = pd.read_csv(tbill_path)
+        tbill_df['Date'] = pd.to_datetime(tbill_df['Date']).dt.strftime('%Y-%m-%d')
+        tbill_dict = dict(zip(tbill_df['Date'], tbill_df['RF_Rate']))
+        master_df['RF_Rate'] = master_df.index.map(lambda d: tbill_dict.get(d, 0.0525))
+    else:
+        master_df['RF_Rate'] = 0.0525
 
     # Format Date as YYYY-MM-DD
     master_df.index = master_df.index.strftime('%Y-%m-%d')

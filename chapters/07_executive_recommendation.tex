@@ -1,0 +1,22 @@
+\section{Executive Investment Recommendation}
+
+Synthesizing empirical findings across portfolio construction, mean-variance optimization, and downside risk analytics, we formulate strategic investment recommendations for Group 3 (Charlie):
+
+\subsection{Core-Satellite Allocation Structure}
+
+We recommend establishing a **60\% Max Sharpe / 40\% GMV Core-Satellite Allocation**.
+
+\begin{itemize}
+  \item \textbf{Core Stabilizer (40\% GMV Tilt):} Anchored in domestic defensive equities (\texttt{TEL}: 15.9\%, \texttt{AEV}: 12.7\%, \texttt{MER}: 9.9\%), providing capital protection, low return correlation with global tech, and steady cash-flow stability.
+  \item \textbf{Satellite Growth Engine (60\% Max Sharpe Tilt):} Captures high-momentum growth via \texttt{NVDA} (35.0\%), \texttt{META} (13.6\%), and \texttt{MER} (11.4\%).
+\end{itemize}
+
+This hybrid allocation targets an annualized expected return of **~33.5\%**, dampens portfolio volatility to **~21.5\%**, and achieves an attractive Sharpe ratio of **~1.05** while mitigating single-stock concentration risk.
+
+\subsection{Execution Governance and Rebalancing Protocol}
+
+\begin{enumerate}
+  \item \textbf{Mandatory Monthly Rebalancing:} Enforce a strict monthly rebalancing calendar. Un-rebalanced buy-and-hold strategies experience severe asset weight drift, allowing volatile constituents like Bitcoin and NVIDIA to dominate portfolio risk. Monthly rebalancing systematically trims outperforming assets at high valuations and reallocates into underperforming core positions, capturing the rebalancing premium.
+  \item \textbf{Risk-Budgeting Limits:} Maintain a daily 95\% Historical VaR ceiling of **2.20\%**. If daily portfolio drawdown breaches **-3.50\%** (95\% Expected Shortfall threshold), trigger an dynamic de-risking protocol that temporarily reallocates satellite growth exposure into 91-Day Philippine T-Bills.
+  \item \textbf{Liquidity Buffer:} Maintain a 5\% cash/T-Bill liquidity reserve to absorb unexpected systemic market shocks without forced asset liquidations.
+\end{enumerate}

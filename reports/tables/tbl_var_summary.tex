@@ -1,0 +1,21 @@
+\begin{table}[H]
+\centering
+\caption{\label{tab:var_summary}Historical and Parametric VaR / CVaR Summary (Daily, 95\% and 99\% Confidence)}
+\resizebox{\ifdim\width>\linewidth\linewidth\else\width\fi}{!}{
+\fontsize{9}{11}\selectfont
+\begin{tabular}[t]{llrr}
+\toprule
+Portfolio & Risk Metric & 95\% Confidence & 99\% Confidence\\
+\midrule
+GMV & Historical VaR & 1.32\% & 2.21\%\\
+GMV & Parametric VaR & 1.41\% & 2.05\%\\
+GMV & Historical ES (CVaR) & 2.14\% & 3.12\%\\
+GMV & Parametric ES (CVaR) & 1.82\% & 2.38\%\\
+\addlinespace
+Max Sharpe & Historical VaR & 2.61\% & 4.58\%\\
+Max Sharpe & Parametric VaR & 3.20\% & 4.62\%\\
+Max Sharpe & Historical ES (CVaR) & 4.12\% & 6.25\%\\
+Max Sharpe & Parametric ES (CVaR) & 4.08\% & 5.21\%\\
+\bottomrule
+\end{tabular}}
+\end{table}

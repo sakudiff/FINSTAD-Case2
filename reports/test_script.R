@@ -1,53 +1,4 @@
----
-title: "Portfolio Management and Risk Consultation"
-subtitle: "FINSTAD Case 2 -- Group 3 (Charlie)"
-author:
-  - "CRUZ, Ricardo Miguel Iñigo"
-  - "GALEDO, Enrique Lorenzo Hermoso"
-  - "SEBALLOS, Josiah Dweyn Panganiban"
-  - "SEECHUNG, Camille Castro"
-  - "SISON, Aaron Joshua Estacio"
-date: "August 17, 2026"
-format:
-  pdf:
-    pdf-engine: pdflatex
-    toc: true
-    toc-depth: 3
-    number-sections: true
-    colorlinks: true
-    documentclass: article
-    classoption: 12pt
-    geometry:
-      - margin=1in
-    fontsize: 11pt
-    code-block-font-size: small
-    highlight-style: arrow
-    keep-tex: true
-include-in-header:
-  - text: |
-      \usepackage{fvextra}
-      \fvset{breaklines=true,breakanywhere=true}
-      \RecustomVerbatimEnvironment{Highlighting}{Verbatim}{breaklines=true,breakanywhere=true,commandchars=\\\{\}}
-      \let\verbatim\Verbatim
-      \let\endverbatim\endVerbatim
-      \usepackage{microtype}
-      \usepackage{adjustbox}
-      \usepackage{booktabs}
-      \usepackage{tabularx}
-      \usepackage{pdflscape}
-      \usepackage{float}
-      \usepackage{ragged2e}
-      \usepackage{csquotes}
-      \clubpenalty=10000
-      \widowpenalty=10000
-      \displaywidowpenalty=10000
-      \sloppy
-execute:
-  warning: false
-  message: false
----
-
-```{r setup, include=FALSE}
+## ----setup, include=FALSE-----------------------------------------------------
 knitr::opts_chunk$set(
   echo = TRUE,
   warning = FALSE,
@@ -67,13 +18,9 @@ safe_kable <- function(data, caption = NULL, digits = 4) {
       bootstrap_options = c("striped", "hover", "condensed")
     )
 }
-```
 
-# Setup and Library Loading
 
-Load the quantitative finance, portfolio analytics, and data visualization libraries required for the analysis.
-
-```{r libraries}
+## ----libraries----------------------------------------------------------------
 # Core data manipulation and visualization
 library(tidyverse)
 library(lubridate)
@@ -98,39 +45,9 @@ library(MASS)
 library(corrplot)
 library(knitr)
 library(kableExtra)
-```
 
-# Executive Summary
 
-This quantitative consultation report evaluates portfolio construction, optimization, and risk management strategies for Group 3 (Charlie) over the six-year sample period from January 2, 2020 through December 31, 2025. The mandated multi-asset investment universe comprises three Philippine equities (**TEL**, **MER**, **AEV**), two US international tech equities (**NVDA**, **META**), and one cryptocurrency (**BTC**), benchmarked against the S&P 500 ETF Trust (**SPY**) and evaluated against a 5.25% risk-free rate (Philippine 91-Day Treasury Bill).
-
-### Key Empirical Findings
-
-1. **Portfolio Construction & Rebalancing Discipline**: An un-rebalanced Buy-and-Hold equal-weighted strategy delivered high nominal cumulative returns driven by massive asset weight drift into NVDA and BTC. However, monthly rebalancing significantly controlled portfolio volatility (down from 32.4% to 22.8% annualized) and contained peak drawdown (reduced from -61.2% to -48.5%), providing a far superior risk-adjusted profile.
-2. **Mean-Variance Portfolio Optimization**:
-   - **Global Minimum Variance (GMV)**: Heavily allocates to low-beta domestic equities (TEL: 39.8%, AEV: 31.9%, MER: 24.8%) with zero allocation to BTC and minimal international tech exposure. GMV achieves an annualized volatility of **14.28%** and a Sharpe ratio of **0.2917**.
-   - **Maximum Sharpe Ratio (Tangency Portfolio)**: Concentrates heavily in high-performing international growth engines (NVDA: 58.4%, META: 22.6%, MER: 19.0%), yielding an annualized return of **49.82%**, volatility of **32.14%**, and a industry-leading Sharpe ratio of **1.3868**.
-3. **Tail Risk & Stress Testing Resilience**: 
-   - Daily 95% Historical Value at Risk (VaR) ranges from **-1.32%** (GMV) to **-2.61%** (Max Sharpe), while 95% Historical Expected Shortfall (CVaR) reaches **-2.14%** (GMV) and **-4.12%** (Max Sharpe).
-   - Under historical crisis simulations (2020 COVID Crash, 2022 Crypto Winter, 2022 Fed Rate Hike), the GMV portfolio demonstrates exceptional resilience (maximum shock loss of -13.8%), whereas the Max Sharpe portfolio incurs severe instantaneous drawdowns (-29.8% in COVID crash, -44.7% in a 1.5x Black Swan event).
-
-### Executive Recommendation
-
-We advise establishing a **Core-Satellite Allocation (60% Max Sharpe / 40% GMV tilt)** with mandatory **monthly systematic rebalancing**. This hybrid structure captures substantial equity growth (target return ~33.5%, Sharpe ratio ~1.05) while enforcing strict risk budget limits (< 2.20% daily 95% VaR) and capital protection during adverse macroeconomic shocks.
-
-# Introduction
-
-The 2020–2025 sample period presented unprecedented structural shifts across global asset markets. Investors confronted the shock of the COVID-19 pandemic, massive fiscal and monetary stimulus, subsequent multi-decade inflation surges, aggressive monetary policy tightening by the Federal Reserve and Bangko Sentral ng Pilipinas (BSP), the rapid commercialization of artificial intelligence, and the institutional integration of digital assets.
-
-Navigating this regime requires rigorous quantitative portfolio management. Modern Portfolio Theory (MPT), pioneered by Markowitz (1952) and extended by Sharpe (1964), provides the foundational framework for optimizing the trade-off between expected return and portfolio variance. However, empirical financial returns exhibit pronounced non-Gaussian characteristics—specifically heavy tails (leptokurtosis) and volatility clustering—demanding advanced downside risk analytics including Value at Risk (VaR), Expected Shortfall (CVaR), Monte Carlo simulation, and historical stress testing (Jorion, 2007; Artzner et al., 1999).
-
-This report delivers a comprehensive portfolio consultation for Group 3 (Charlie). Section 2 details data acquisition, cleaning, and log return calculations. Section 3 presents exploratory financial analysis and asset distribution diagnostics. Section 4 evaluates equal-weighted buy-and-hold versus monthly rebalanced execution. Section 5 solves for the Efficient Frontier, GMV, and Max Sharpe portfolios. Section 6 conducts quantitative risk assessments, and Section 7 formulates strategic investment recommendations.
-
-# Data Ingestion and Preparation
-
-Load the compiled master dataset containing historical daily close prices for Group 3's asset universe (TEL, MER, AEV, NVDA, META, BTC, SPY) and the risk-free rate benchmark over the sample period (January 2, 2020 -- December 31, 2025).
-
-```{r data-ingestion}
+## ----data-ingestion-----------------------------------------------------------
 # Define path to master dataset
 data_path <- file.path("..", "data", "master_dataset.csv")
 
@@ -148,15 +65,9 @@ raw_data <- raw_data %>%
 
 # Preview structure
 glimpse(raw_data)
-```
 
-## Daily Log Return Computation
 
-Compute daily log returns for all portfolio assets and the benchmark:
-
-$$r_{i,t} = \ln\left(\frac{P_{i,t}}{P_{i,t-1}}\right)$$
-
-```{r return-computation}
+## ----return-computation-------------------------------------------------------
 prices_df <- raw_data
 
 # Extract asset price columns
@@ -197,13 +108,9 @@ cat("Dataset span:", format(min(index(returns_xts))), "to", format(max(index(ret
 cat("Total trading days:", nrow(returns_xts), "\n")
 cat("Annualized Risk-Free Rate:", percent(rf_annual, accuracy = 0.01), "\n")
 cat("Daily Log Risk-Free Rate:", percent(rf_daily, accuracy = 0.0001), "\n")
-```
 
-## Data Validation and Summary Check
 
-Verify data integrity, check for missing values, and print head records of returns.
-
-```{r}
+## -----------------------------------------------------------------------------
 #| label: tbl-data-validation
 #| tbl-cap: "First 6 Days of Asset Daily Log Returns (2020)"
 
@@ -224,11 +131,9 @@ returns_head_df <- as.data.frame(head(returns_xts)) %>%
 
 kbl(returns_head_df, booktabs = TRUE, align = "c") %>%
   kable_styling(latex_options = c("striped", "hold_position"), bootstrap_options = c("striped", "hover"))
-```
 
-# Exploratory Financial Analysis
 
-```{r}
+## -----------------------------------------------------------------------------
 #| label: tbl-exploratory-stats
 #| tbl-cap: "Descriptive Statistics for Portfolio Assets (Jan 2, 2020 -- Dec 31, 2025)"
 
@@ -240,11 +145,9 @@ stats_df <- as.data.frame(stats_mat) %>%
 
 kbl(stats_df, booktabs = TRUE, digits = 4) %>%
   kable_styling(latex_options = c("striped", "hold_position", "scale_down"), bootstrap_options = c("striped", "hover"))
-```
 
-## Quantitative Design System (QVRS Theme & Colors)
 
-```{r quant-theme}
+## ----quant-theme--------------------------------------------------------------
 # QVRS Economist Color Tokens
 qvrs_colors <- c(
   "TEL"  = "#1F2E7A", # Chicago 30
@@ -275,11 +178,9 @@ theme_quant <- function() {
       strip.text = element_text(face = "bold", size = 9, color = "#141F52")
     )
 }
-```
 
-## Historical Price & Return Trajectories
 
-```{r}
+## -----------------------------------------------------------------------------
 #| label: fig-price-history
 #| fig.cap: "Historical Normalized Asset Price Trajectories (Base = 100 on Jan 2, 2020)"
 #| fig.width: 8
@@ -307,9 +208,9 @@ ggplot(prices_norm_df, aes(x = Date, y = Normalized_Price, color = Asset)) +
     y = "Normalized Index (Jan 2020 = 100)"
   ) +
   theme_quant()
-```
 
-```{r}
+
+## -----------------------------------------------------------------------------
 #| label: fig-ts-returns
 #| fig.cap: "Daily Log Return Trajectories Across Portfolio Universe (Jan 2020 -- Dec 2025)"
 #| fig.width: 8
@@ -336,11 +237,9 @@ ggplot(returns_tidy, aes(x = Date, y = Return, color = Asset)) +
   ) +
   theme_quant() +
   theme(legend.position = "none")
-```
 
-## Distributional Shape: Histograms and Empirical Density vs Normal Reference
 
-```{r}
+## -----------------------------------------------------------------------------
 #| label: fig-density-hist
 #| fig.cap: "Empirical Return Distributions vs Gaussian Reference Curves"
 #| fig.width: 8
@@ -391,11 +290,9 @@ ggplot(returns_tidy, aes(x = Return)) +
     y = "Density"
   ) +
   theme_quant()
-```
 
-## Quantile-Quantile (Q-Q) Tail Diagnostics
 
-```{r}
+## -----------------------------------------------------------------------------
 #| label: fig-qq-plots
 #| fig.cap: "Normal Q-Q Diagnostics Demonstrating Heavy Tail Leptokurtosis"
 #| fig.width: 8
@@ -412,11 +309,9 @@ ggplot(returns_tidy, aes(sample = Return)) +
     y = "Sample Quantiles"
   ) +
   theme_quant()
-```
 
-## Dispersion of Daily Returns and Outlier Diagnostics
 
-```{r}
+## -----------------------------------------------------------------------------
 #| label: fig-boxplots
 #| fig.cap: "Return Dispersion and Extreme Outlier Boxplots"
 #| fig.width: 8
@@ -434,11 +329,9 @@ ggplot(returns_tidy, aes(x = Asset, y = Return, fill = Asset)) +
   ) +
   theme_quant() +
   theme(legend.position = "none")
-```
 
-## Cumulative Performance Comparison (Growth of $1.00)
 
-```{r}
+## -----------------------------------------------------------------------------
 #| label: fig-cum-returns
 #| fig.cap: "Cumulative Growth Trajectories of USD 1.00 Investment (Jan 2020 -- Dec 2025)"
 #| fig.width: 8
@@ -462,11 +355,9 @@ ggplot(cum_returns_df, aes(x = Date, y = Wealth, color = Asset)) +
     y = "Wealth Index (USD)"
   ) +
   theme_quant()
-```
 
-## Correlation Structure
 
-```{r}
+## -----------------------------------------------------------------------------
 #| label: fig-correlation-matrix
 #| fig.cap: "Asset Return Correlation Heatmap (Group 3 Universe)"
 
@@ -482,13 +373,9 @@ corrplot(
   number.cex = 0.8,
   mar = c(0, 0, 1, 0)
 )
-```
 
-# Portfolio Construction (Equal-Weight vs Monthly Rebalanced)
 
-This section evaluates the performance of equal-weighted asset allocations under two distinct execution regimes: a static Buy-and-Hold strategy and a disciplined Monthly Rebalanced strategy. The 6-asset portfolio universe (TEL, MER, AEV, NVDA, META, BTC) starts with equal baseline weights ($w_i = 1/6 \approx 16.67\%$) on January 2, 2020 and is benchmarked against the SPDR S&P 500 ETF Trust (SPY).
-
-```{r portfolio-construction-calc}
+## ----portfolio-construction-calc----------------------------------------------
 # Simple (arithmetic) returns: a weighted sum of log returns is not the
 # portfolio return, so Return.portfolio and all portfolio metrics below
 # operate on simple returns converted from the carried log series.
@@ -547,20 +434,16 @@ perf_summary_df <- rbind(
   eval_portfolio(r_reb, "Equal-Weight (Monthly Rebalanced)"),
   eval_portfolio(ret_smp[, "SPY"], "SPDR S&P 500 ETF (SPY Benchmark)")
 )
-```
 
-## Comparative Performance Evaluation
 
-```{r}
+## -----------------------------------------------------------------------------
 #| label: tbl-portfolio-performance
 #| tbl-cap: "Portfolio Performance Summary Comparison (Jan 2, 2020 -- Dec 31, 2025)"
 
 safe_kable(perf_summary_df, caption = "Portfolio Performance Summary Comparison (Jan 2, 2020 -- Dec 31, 2025)")
-```
 
-## Cumulative Portfolio Growth Comparison
 
-```{r}
+## -----------------------------------------------------------------------------
 #| label: fig-portfolio-growth
 #| fig.cap: "Cumulative Growth Trajectories of USD 1.00 Investment Across Strategies"
 #| fig.width: 8
@@ -605,11 +488,9 @@ ggplot(port_growth_df, aes(x = Date, y = Wealth, color = Strategy, linetype = St
     y = "Wealth Index (USD)"
   ) +
   theme_quant()
-```
 
-## Portfolio Asset Weight Drift Analysis
 
-```{r}
+## -----------------------------------------------------------------------------
 #| label: fig-rebalanced-weights
 #| fig.cap: "Asset Weight Drift Over Time in the Un-Rebalanced Buy-and-Hold Portfolio"
 #| fig.width: 8
@@ -634,11 +515,9 @@ ggplot(weights_bnh_df, aes(x = Date, y = Weight, fill = Asset)) +
     y = "Portfolio Weight Share"
   ) +
   theme_quant()
-```
 
-# Portfolio Optimization (Efficient Frontier, GMV, Max Sharpe)
 
-```{r portfolio-optimization}
+## ----portfolio-optimization---------------------------------------------------
 mu_ann    <- colMeans(asset_returns_smp, na.rm = TRUE) * 252
 Sigma_ann <- cov(asset_returns_smp, use = "pairwise.complete.obs") * 252
 
@@ -647,9 +526,9 @@ asset_names <- names(mu_ann)
 
 # Equal-weight starting point for the solver
 w0 <- rep(1 / n_assets, n_assets)
-```
 
-```{r}
+
+## -----------------------------------------------------------------------------
 # --- Objective 1: portfolio variance (minimized for GMV and each Efficient Frontier point) ---
 eval_f_var <- function(w) {
   as.numeric(t(w) %*% Sigma_ann %*% w)
@@ -685,9 +564,9 @@ opt_settings <- list(
   "xtol_rel"  = 1.0e-8,
   "maxeval"   = 1000
 )
-```
 
-```{r}
+
+## -----------------------------------------------------------------------------
 # --- Global Minimum Variance (GMV) Portfolio ---
 gmv_solution <- nloptr(
   x0            = w0,
@@ -705,9 +584,9 @@ names(w_gmv) <- asset_names
 
 gmv_ret <- sum(w_gmv * mu_ann)
 gmv_sd  <- sqrt(as.numeric(t(w_gmv) %*% Sigma_ann %*% w_gmv))
-```
 
-```{r}
+
+## -----------------------------------------------------------------------------
 # --- Maximum Sharpe Ratio (Tangency) Portfolio ---
 sharpe_solution <- nloptr(
   x0            = w0,
@@ -726,9 +605,9 @@ names(w_sharpe) <- asset_names
 sharpe_ret <- sum(w_sharpe * mu_ann)
 sharpe_sd  <- sqrt(as.numeric(t(w_sharpe) %*% Sigma_ann %*% w_sharpe))
 sharpe_val <- (sharpe_ret - rf_annual) / sharpe_sd
-```
 
-```{r}
+
+## -----------------------------------------------------------------------------
 # --- Efficient Frontier: sweep target returns, solve exact QP via quadprog ---
 target_returns <- seq(min(mu_ann), max(mu_ann), length.out = 50)
 frontier_list  <- vector("list", length(target_returns))
@@ -763,9 +642,9 @@ for (i in seq_along(target_returns)) {
 }
 
 efficient_frontier_df <- bind_rows(frontier_list)
-```
 
-```{r}
+
+## -----------------------------------------------------------------------------
 #| label: fig-efficient-frontier
 #| fig.cap: "Efficient Frontier with Global Minimum Variance and Maximum Sharpe Portfolios"
 #| fig.width: 8
@@ -792,9 +671,9 @@ ggplot(efficient_only_df, aes(x = Risk, y = Return)) +
     y = "Annualized Expected Return"
   ) +
   theme_quant()
-```
 
-```{r}
+
+## -----------------------------------------------------------------------------
 #| label: tbl-optimal-weights
 #| tbl-cap: "Optimal Portfolio Weights: GMV vs Maximum Sharpe"
 
@@ -805,9 +684,9 @@ optimal_weights_df <- data.frame(
 )
 
 safe_kable(optimal_weights_df, caption = "Optimal Portfolio Weights: GMV vs Maximum Sharpe")
-```
 
-```{r}
+
+## -----------------------------------------------------------------------------
 #| label: fig-portfolio-allocation
 #| fig.cap: "Optimal Portfolio Allocation by Asset (GMV vs Max Sharpe)"
 #| fig.width: 8
@@ -831,11 +710,9 @@ ggplot(weights_long_df, aes(x = Asset, y = Weight, fill = Asset)) +
    ) +
   theme_quant() +
   theme(legend.position = "none")
-```
 
-# Portfolio Risk Assessment (VaR, CVaR, Monte Carlo, Stress Testing)
 
-```{r portfolio-risk}
+## ----portfolio-risk-----------------------------------------------------------
 port_returns_gmv <- Return.portfolio(
   R = asset_returns_smp,
   weights = w_gmv,
@@ -847,9 +724,9 @@ port_returns_sharpe <- Return.portfolio(
   weights = w_sharpe,
   rebalance_on = "months"
 )
-```
 
-```{r}
+
+## -----------------------------------------------------------------------------
 #| label: tbl-var-summary
 #| tbl-cap: "Historical and Parametric VaR / CVaR Summary (Daily, 95% and 99% Confidence)"
 
@@ -889,9 +766,9 @@ risk_summary_df <- data.frame(
 )
 
 safe_kable(risk_summary_df, caption = "Historical and Parametric VaR / CVaR Summary (Daily, 95% and 99% Confidence)")
-```
 
-```{r}
+
+## -----------------------------------------------------------------------------
 # Simulate 10,000 one-day return scenarios using multivariate normal distribution
 set.seed(123)
 n_sims <- 10000
@@ -917,16 +794,16 @@ mc_summary_df <- data.frame(
   `MC ES (95%)`  = sprintf("%.2f%%", c(abs(mc_es_gmv_95), abs(mc_es_sharpe_95)) * 100),
   check.names = FALSE
 )
-```
 
-```{r}
+
+## -----------------------------------------------------------------------------
 #| label: tbl-mc-summary
 #| tbl-cap: "Monte Carlo Simulated VaR and Expected Shortfall (10,000 Simulations)"
 
 safe_kable(mc_summary_df, caption = "Monte Carlo Simulated VaR and Expected Shortfall (10,000 Simulations)")
-```
 
-```{r}
+
+## -----------------------------------------------------------------------------
 #| label: fig-mc-distribution
 #| fig.cap: "Historical vs Monte Carlo Simulated Return Distribution (Max Sharpe Portfolio)"
 #| fig.width: 8
@@ -949,9 +826,9 @@ ggplot(dist_compare_df, aes(x = Return, fill = Source, color = Source)) +
     y = "Density"
   ) +
   theme_quant()
-```
 
-```{r}
+
+## -----------------------------------------------------------------------------
 # Historical Stress Scenario Windows
 covid_crash_window     <- "2020-02-19/2020-03-23"
 tech_selloff_window    <- "2021-11-19/2022-01-27"
@@ -981,9 +858,9 @@ stress_scenarios <- tibble(
   META = c(shock_covid["META"], shock_crypto["META"], shock_fed["META"], shock_tech["META"], shock_black_swan["META"]),
   BTC  = c(shock_covid["BTC"],  shock_crypto["BTC"],  shock_fed["BTC"],  shock_tech["BTC"],  shock_black_swan["BTC"])
 )
-```
 
-```{r}
+
+## -----------------------------------------------------------------------------
 stress_impact_df <- stress_scenarios %>%
   rowwise() %>%
   mutate(
@@ -993,9 +870,9 @@ stress_impact_df <- stress_scenarios %>%
   ) %>%
   ungroup() %>%
   dplyr::select(Scenario, GMV_Impact, MaxSharpe_Impact)
-```
 
-```{r}
+
+## -----------------------------------------------------------------------------
 #| label: tbl-stress-summary
 #| tbl-cap: "Portfolio Impact Under Stress Scenarios"
 
@@ -1007,9 +884,9 @@ stress_summary_df <- stress_impact_df %>%
   rename(`GMV Portfolio Impact` = GMV_Impact, `Max Sharpe Portfolio Impact` = MaxSharpe_Impact)
 
 safe_kable(stress_summary_df, caption = "Portfolio Impact Under Stress Scenarios")
-```
 
-```{r}
+
+## -----------------------------------------------------------------------------
 #| label: fig-stress-test
 #| fig.cap: "Portfolio Value Impact Across Stress Scenarios"
 #| fig.width: 8
@@ -1031,123 +908,4 @@ ggplot(stress_long_df, aes(x = reorder(Scenario, Impact), y = Impact, fill = Por
     y = "Portfolio Return Impact"
   ) +
   theme_quant()
-```
 
-# Executive Investment Recommendation
-
-Based on rigorous quantitative evaluation of Group 3's asset universe over the 2020--2025 sample period, we present actionable investment guidelines for institutional portfolio implementation:
-
-### 1. Core-Satellite Allocation Framework
-
-We recommend establishing a **60% Max Sharpe / 40% GMV Hybrid Portfolio**. 
-- **Rationale**: Relying solely on the Maximum Sharpe portfolio creates heavy concentration in NVDA (58.4%) and META (22.6%), exposing the fund to severe single-stock drawdown risk (-29.8% in COVID crash, -44.7% in Black Swan). Blending 40% GMV introduces stabilizing domestic equities (TEL, MER, AEV), dampening portfolio volatility from 32.14% down to ~21.5% while maintaining an attractive target annual return of ~33.5% (Sharpe Ratio ~1.05).
-
-### 2. Execution Discipline & Rebalancing Frequency
-
-- **Mandatory Rebalancing Schedule**: Execute systematic **monthly rebalancing**.
-- **Empirical Justification**: As demonstrated in Section 4, un-rebalanced Buy-and-Hold portfolios suffer from severe weight drift—allowing volatile assets like BTC and NVDA to dominate total risk. Monthly rebalancing caps tail risk, systematically trims outperforming assets at high valuations, and redeems underperforming constituents to harvest the rebalancing premium.
-
-### 3. Risk Governance & Tail Risk Limits
-
-- **Daily VaR Limit**: Enforce a maximum Daily 95% Historical VaR budget of **2.20%**.
-- **Expected Shortfall Monitoring**: Track 95% CVaR continuously. If daily portfolio loss exceeds **-3.50%**, trigger dynamic risk reduction (temporarily shifting satellite growth weights into PH T-Bills or GMV assets).
-- **Stress Liquidity Buffer**: Maintain a minimum 5% liquidity reserve in 91-Day Philippine T-Bills to absorb capital drawdowns during systemic shocks without forced asset liquidations.
-
-# References
-
-- Artzner, P., Delbaen, F., Eber, J. M., & Heath, D. (1999). Coherent measures of risk. *Mathematical Finance*, 9(3), 203-228.
-- Bodie, Z., Kane, A., & Marcus, A. J. (2021). *Investments* (12th ed.). McGraw-Hill Education.
-- Fabozzi, F. J., Focardi, S. M., & Kolm, P. N. (2002). *Financial Modeling of the Equity Market: From Portfolio Optimization to Stress Testing*. John Wiley & Sons.
-- Jorion, P. (2007). *Value at Risk: The New Benchmark for Managing Financial Risk* (3rd ed.). McGraw-Hill.
-- Markowitz, H. (1952). Portfolio selection. *The Journal of Finance*, 7(1), 77-91.
-- Sharpe, W. F. (1964). Capital asset prices: A theory of market equilibrium under conditions of risk. *The Journal of Finance*, 19(3), 425-442.
-
-# Appendix: Complete R Analysis Code
-
-```r
-# ==============================================================================
-# FINSTAD Case 2 Group 3 (Charlie) Complete Portfolio & Risk Pipeline
-# ==============================================================================
-
-library(tidyverse)
-library(lubridate)
-library(scales)
-library(xts)
-library(zoo)
-library(PerformanceAnalytics)
-library(PortfolioAnalytics)
-library(nloptr)
-library(quadprog)
-library(MASS)
-
-# 1. Load Data
-raw_data <- read_csv("../data/master_dataset.csv", show_col_types = FALSE) %>%
-  mutate(Date = as.Date(Date)) %>%
-  filter(Date >= as.Date("2020-01-02") & Date <= as.Date("2025-12-31")) %>%
-  arrange(Date)
-
-asset_cols <- c("TEL", "MER", "AEV", "NVDA", "META", "BTC", "SPY")
-portfolio_assets <- c("TEL", "MER", "AEV", "NVDA", "META", "BTC")
-
-prices_mat <- as.matrix(raw_data[, asset_cols])
-prices_xts <- xts(prices_mat, order.by = raw_data[["Date"]])
-prices_carried <- na.locf(prices_xts)
-
-# Log Returns
-returns_xts_carried <- Return.calculate(prices_carried, method = "log")[-1, ]
-asset_returns_carried <- returns_xts_carried[, portfolio_assets]
-
-# Simple Returns for Portfolio Analytics
-ret_smp <- exp(returns_xts_carried) - 1
-asset_returns_smp <- ret_smp[, portfolio_assets]
-
-# 2. Portfolio Construction (Equal Weight)
-w_eq <- rep(1 / 6, 6)
-names(w_eq) <- portfolio_assets
-
-port_bnh <- Return.portfolio(R = asset_returns_smp, weights = w_eq)
-port_reb <- Return.portfolio(R = asset_returns_smp, weights = w_eq, rebalance_on = "months")
-
-# 3. Mean-Variance Optimization
-mu_ann    <- colMeans(asset_returns_smp, na.rm = TRUE) * 252
-Sigma_ann <- cov(asset_returns_smp, use = "pairwise.complete.obs") * 252
-rf_annual <- 0.0525
-
-# GMV Portfolio
-eval_f_var <- function(w) as.numeric(t(w) %*% Sigma_ann %*% w)
-eval_grad_f_var <- function(w) nl.grad(w, eval_f_var)
-eval_g_eq <- function(w) sum(w) - 1
-eval_jac_g_eq <- function(w) nl.jacobian(w, eval_g_eq)
-
-w0 <- rep(1/6, 6)
-gmv_sol <- nloptr(x0 = w0, eval_f = eval_f_var, eval_grad_f = eval_grad_f_var,
-                  lb = rep(0,6), ub = rep(1,6), eval_g_eq = eval_g_eq,
-                  eval_jac_g_eq = eval_jac_g_eq,
-                  opts = list("algorithm" = "NLOPT_LD_SLSQP", "xtol_rel" = 1e-8))
-w_gmv <- gmv_sol$solution
-names(w_gmv) <- portfolio_assets
-
-# Max Sharpe Portfolio
-eval_f_sharpe <- function(w) {
-  p_ret <- sum(w * mu_ann)
-  p_sd  <- sqrt(as.numeric(t(w) %*% Sigma_ann %*% w))
-  -(p_ret - rf_annual) / p_sd
-}
-eval_grad_f_sharpe <- function(w) nl.grad(w, eval_f_sharpe)
-
-shp_sol <- nloptr(x0 = w0, eval_f = eval_f_sharpe, eval_grad_f = eval_grad_f_sharpe,
-                  lb = rep(0,6), ub = rep(1,6), eval_g_eq = eval_g_eq,
-                  eval_jac_g_eq = eval_jac_g_eq,
-                  opts = list("algorithm" = "NLOPT_LD_SLSQP", "xtol_rel" = 1e-8))
-w_sharpe <- shp_sol$solution
-names(w_sharpe) <- portfolio_assets
-
-# 4. Risk Analytics (VaR / CVaR / Monte Carlo)
-port_ret_gmv <- Return.portfolio(R = asset_returns_smp, weights = w_gmv, rebalance_on = "months")
-port_ret_shp <- Return.portfolio(R = asset_returns_smp, weights = w_sharpe, rebalance_on = "months")
-
-var_gmv_95 <- abs(VaR(port_ret_gmv, p = 0.95, method = "historical"))
-var_shp_95 <- abs(VaR(port_ret_shp, p = 0.95, method = "historical"))
-es_gmv_95  <- abs(ES(port_ret_gmv, p = 0.95, method = "historical"))
-es_shp_95  <- abs(ES(port_ret_shp, p = 0.95, method = "historical"))
-```

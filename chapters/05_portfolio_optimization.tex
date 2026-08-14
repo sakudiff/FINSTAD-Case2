@@ -1,0 +1,53 @@
+\section{Portfolio Optimization}
+
+Mean-variance optimization identifies optimal asset allocations along the Markowitz Efficient Frontier by maximizing expected portfolio return for a given level of variance, or minimizing variance for a target expected return.
+
+\subsection{Optimization Problem Formulation}
+
+Let $\mathbf{w} = [w_1, w_2, \dots, w_n]^T$ denote the vector of asset weights across the $n=6$ portfolio constituents, $\boldsymbol{\mu}$ the vector of annualized expected arithmetic returns, and $\boldsymbol{\Sigma}$ the $6 \times 6$ annualized asset covariance matrix. All portfolios enforce fully-invested ($\sum_{i=1}^n w_i = 1$) and long-only ($w_i \ge 0$) constraints.
+
+\subsubsection{Global Minimum Variance (GMV) Portfolio}
+
+The Global Minimum Variance portfolio minimizes total portfolio risk regardless of expected return:
+
+\begin{equation}
+  \min_{\mathbf{w}} \quad \mathbf{w}^T \boldsymbol{\Sigma} \mathbf{w} \quad \text{subject to} \quad \mathbf{w}^T \mathbf{1} = 1, \quad w_i \ge 0 \;\; \forall i
+\end{equation}
+
+\subsubsection{Maximum Sharpe Ratio (Tangency) Portfolio}
+
+The Tangency portfolio maximizes the Sharpe ratio relative to the 5.25\% risk-free rate hurdle:
+
+\begin{equation}
+  \max_{\mathbf{w}} \quad \frac{\mathbf{w}^T \boldsymbol{\mu} - R_f}{\sqrt{\mathbf{w}^T \boldsymbol{\Sigma} \mathbf{w}}} \quad \text{subject to} \quad \mathbf{w}^T \mathbf{1} = 1, \quad w_i \ge 0 \;\; \forall i
+\end{equation}
+
+\subsection{Empirical Optimization Results}
+
+Table~\ref{tab:optimal_weights} details the numerical weights derived from solving the optimization problems using non-linear programming (SLSQP algorithm via \texttt{nloptr}) and exact quadratic programming (\texttt{quadprog}).
+
+\input{tables/tbl_optimal_weights.tex}
+
+The Global Minimum Variance (GMV) portfolio allocates heavily to low-beta domestic equities: PLDT (\texttt{TEL}: 39.82\%), Aboitiz Equity Ventures (\texttt{AEV}: 31.85\%), and Manila Electric (\texttt{MER}: 24.81\%), with a minimal allocation to NVIDIA (\texttt{NVDA}: 3.52\%) and zero allocation to \texttt{META} or \texttt{BTC}. GMV achieves an annualized volatility of **14.28\%** and a Sharpe ratio of **0.2917**.
+
+The Maximum Sharpe Ratio portfolio concentrates in high-momentum global tech engines: \texttt{NVDA} (58.36\%), \texttt{META} (22.60\%), and domestic power utility \texttt{MER} (19.04\%). This allocation yields an annualized expected return of **49.82\%**, an annualized volatility of **32.14\%**, and a Sharpe ratio of **1.3868**.
+
+\subsection{Efficient Frontier Mapping}
+
+Figure~\ref{fig:efficient_frontier} plots the locus of efficient portfolios forming the Markowitz Efficient Frontier, highlighting the GMV and Maximum Sharpe tangency points.
+
+\begin{figure}[H]
+  \centering
+  \safeincludegraphics[width=0.90\textwidth]{figures/fig-efficient-frontier-1.pdf}
+  \caption{Efficient Frontier Trade-Off Curve with GMV and Tangency Points}
+  \label{fig:efficient_frontier}
+\end{figure}
+
+Figure~\ref{fig:portfolio_allocation} compares the asset weight breakdown between GMV and Max Sharpe strategies.
+
+\begin{figure}[H]
+  \centering
+  \safeincludegraphics[width=0.85\textwidth]{figures/fig-portfolio-allocation-1.pdf}
+  \caption{Optimal Asset Allocations: GMV vs Maximum Sharpe Ratio}
+  \label{fig:portfolio_allocation}
+\end{figure}
