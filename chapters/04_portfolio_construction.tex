@@ -6,22 +6,7 @@ Portfolio construction transforms individual asset return dynamics into integrat
 
 Table~\ref{tab:portfolio_performance} presents cumulative returns, annualized return (CAGR), annualized volatility, Sharpe ratios (using the 5.25 percent Philippine 91-day T-bill rate as the risk-free benchmark), and maximum drawdowns for both strategies and the SPY benchmark.
 
-\begin{table}[H]
-\centering
-\caption{\label{tab:portfolio_performance}Portfolio Performance Summary Comparison (Jan 2, 2020 -- Jan 2, 2026)}
-\centering
-\resizebox{\ifdim\width>\linewidth\linewidth\else\width\fi}{!}{
-\fontsize{8}{10}\selectfont
-\begin{tabular}[t]{lrrrrr}
-\toprule
-Strategy & Cumulative Return & CAGR (Annualized) & Annual Volatility & Sharpe Ratio (Rf=5.25\%) & Max Drawdown\\
-\midrule
-Equal-Weight (Buy \& Hold) & 754.79\% & 43.13\% & 35.11\% & 1.0787 & -58.21\%\\
-Equal-Weight (Monthly Rebalanced) & 387.38\% & 30.30\% & 24.17\% & 1.0365 & -43.20\%\\
-SPDR S\&P 500 ETF (SPY Benchmark) & 129.48\% & 14.89\% & 20.74\% & 0.4648 & -33.72\%\\
-\bottomrule
-\end{tabular}}
-\end{table}
+\input{tables/tbl_portfolio_performance.tex}
 
 Both portfolio configurations generated substantial alpha relative to the SPY benchmark. The Buy-and-Hold strategy delivered a cumulative return of 754.79 percent and a 43.13 percent CAGR, nearly six times the benchmark's cumulative return. This outperformance was driven by unconstrained weight compounding in NVIDIA and Bitcoin, which together absorbed roughly 87 percent of the portfolio's capital by the end of the sample. The cost of that concentration is visible in the risk metrics: annualized volatility of 35.11 percent and a maximum drawdown of -58.21 percent, the deepest in the table.
 
