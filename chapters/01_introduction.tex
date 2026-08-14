@@ -1,10 +1,22 @@
 \section{Introduction}
 
-Portfolio management involves allocating funds among different categories of assets to ensure the proper achievement of a balance between expected return and risk. Modern Portfolio Theory provides the baseline theoretical foundation for this process, arguing that investors should evaluate securities portfolios not solely on their individual merits, but on expected returns, volatility, and pairwise covariance with other assets in the portfolio \autocite{markowitz1952}. Diversification assists investors in reducing portfolio risk without an equivalent reduction in expected return when selected assets exhibit imperfect correlations.
+Portfolio management involves allocating funds among different categories of assets to ensure the proper achievement of a balance between expected return and risk. Modern portfolio theory provides the base theoretical foundation for this process, arguing that investors should classify and evaluate securities portfolios not solely on their individuality, but also on expected returns and volatility, as well as their covariance with other assets in the portfolio \autocite{markowitz1952}. Thus, diversification may assist investors in reducing portfolio risk without an equivalent reduction in expected return when selected assets are imperfectly correlated.
 
-This case study evaluates a diversified portfolio consisting of three Philippine equities: PLDT Inc. (\texttt{TEL}), Manila Electric Company (\texttt{MER}), and Aboitiz Equity Ventures (\texttt{AEV}); two international technology growth equities: NVIDIA Corporation (\texttt{NVDA}) and Meta Platforms, Inc. (\texttt{META}); and one alternative digital asset: Bitcoin (\texttt{BTC}). By combining domestic Philippine equities, Western growth technology stocks, and a cryptocurrency, the asset universe provides a structured framework to evaluate cross-asset, cross-sector, and cross-border diversification benefits. However, individual asset dynamics must be analyzed carefully, as asset volatility varies across market regimes and macro stress periods (Almeida \& Gon\c{c}alves, 2023).
+This case study sheds light on evaluating a diversified portfolio consisting of domestic Philippine securities, Western growth-oriented technology stocks, and a digital cryptocurrency asset. This allocation provides a structured opportunity to assess whether diversification across different platforms, industries, asset classes, and geographies can enhance portfolio performance. However, each individual asset must be assessed carefully as certain assets are substantially more volatile than others, and diversification benefits may vary across market regimes and periods of financial stress (Almeida \& Gon\c{c}alves, 2023).
 
-Using daily price data from January 2, 2020 through December 31, 2025, this study examines the risk and return profile of the multi-asset portfolio benchmarked against the SPDR S\&P 500 ETF Trust (\texttt{SPY}). Daily log return series are evaluated to examine descriptive statistics, distributional shapes, tail risk, and correlation dynamics. The analysis compares static Buy-and-Hold execution against systematic Monthly Rebalancing to determine how periodic re-alignment influences portfolio growth, asset weight drift, and downside risk exposure.
+Through the use of daily adjusted closing price data from January 2, 2020 through December 31, 2025, this study gauges the return and risk profile of the investment portfolio benchmarked against the SPDR S\&P 500 ETF Trust (\texttt{SPY}). Furthermore, daily log return measurements are calculated to examine descriptive statistics, return distributions, correlations, and volatility among the selected assets. The analysis also compares portfolio performance with and without monthly rebalancing to assess whether restoring portfolio weights periodically affects portfolio growth, risk exposure, and overall performance.
+
+\subsection{Mandate and Assigned Asset Universe}
+
+This report delivers a quantitative portfolio management consultation for Group 3 (Charlie). The assigned asset universe comprises six multi-asset constituents across four distinct asset classes:
+
+\begin{enumerate}
+  \item \textbf{Philippine Equities (Domestic Core):} PLDT Inc. (\texttt{TEL}), Manila Electric Company (\texttt{MER}), and Aboitiz Equity Ventures (\texttt{AEV}).
+  \item \textbf{International Equities (Growth Satellite):} NVIDIA Corporation (\texttt{NVDA}) and Meta Platforms, Inc. (\texttt{META}).
+  \item \textbf{Digital Assets (Alternative Satellite):} Bitcoin (\texttt{BTC}).
+  \item \textbf{Benchmark ETF:} SPDR S\&P 500 ETF Trust (\texttt{SPY}).
+  \item \textbf{Risk-Free Rate Baseline:} Philippine 91-Day Treasury Bill secondary market rate ($R_f = 5.25\%$ per annum benchmark).
+\end{enumerate}
 
 \subsection{Risk-Free Rate Benchmark Specification}
 
@@ -15,3 +27,7 @@ The hurdle rate for all excess return, Sharpe ratio, and tangency portfolio calc
 \end{equation}
 
 This hurdle rate represents the riskless baseline return earned by domestic institutional capital.
+
+\subsection{Report Organization}
+
+The remainder of this report is structured as follows: Section 2 details data acquisition, FX conversion, calendar alignment, and missing value treatment. Section 3 conducts exploratory financial analysis and distributional diagnostics. Section 4 evaluates Buy-and-Hold versus Monthly Rebalanced equal-weighted portfolios. Section 5 solves for the Efficient Frontier, Global Minimum Variance (GMV), and Maximum Sharpe Ratio portfolios. Section 6 assesses downside risk via VaR, Expected Shortfall, Monte Carlo simulations, and stress testing. Section 7 presents executive investment recommendations, and Section 8 lists references.
