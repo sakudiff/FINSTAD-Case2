@@ -1,84 +1,219 @@
 \documentclass[12pt]{article}
 
-\usepackage[margin=1in]{geometry}
-\usepackage{microtype}
-\usepackage{adjustbox}
+\usepackage{geometry}
+\geometry{margin=1in}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\let\Bbbk\relax
+\usepackage{newtxtext,newtxmath}
+\usepackage{tikz}
+\usetikzlibrary{calc, arrows.meta, shapes.geometric, positioning, fit, backgrounds}
+\usepackage{xcolor}
+\usepackage{graphicx}
+\graphicspath{{.}}
+\usepackage{caption}
+\usepackage{subcaption}
 \usepackage{booktabs}
 \usepackage{tabularx}
+\usepackage{array}
+\usepackage{multirow}
+\usepackage{siunitx}
+\usepackage{threeparttable}
+\usepackage{rotating}
+\usepackage{adjustbox}
 \usepackage{pdflscape}
 \usepackage{float}
-\usepackage{ragged2e}
-\usepackage{csquotes}
-\usepackage{graphicx}
-\usepackage{amsmath,amssymb}
+\usepackage{tablefootnote}
 \usepackage{listings}
-\usepackage{xcolor}
-\usepackage{hyperref}
+\usepackage{setspace}
+\usepackage{titlesec}
+\usepackage{ragged2e}
+\usepackage{indentfirst}
+\usepackage{csquotes}
+\usepackage[hidelinks]{hyperref}
+\usepackage{url}
+\usepackage[style=apa, backend=biber]{biblatex}
+\addbibresource{references.bib}
 
-\hypersetup{
-    colorlinks=true,
-    linkcolor=blue,
-    citecolor=blue,
-    urlcolor=blue
+\definecolor{ecored}{HTML}{E3120B}
+\definecolor{chi20}{HTML}{141F52}
+\definecolor{chi30}{HTML}{1F2E7A}
+\definecolor{chi45}{HTML}{2E45B8}
+\definecolor{chi90}{HTML}{D6DBF5}
+\definecolor{chi95}{HTML}{EBEDFA}
+\definecolor{hk45}{HTML}{1DC9A4}
+\definecolor{hk90}{HTML}{D2F9F0}
+\definecolor{sg55}{HTML}{F97A1F}
+\definecolor{sg90}{HTML}{FEE1CD}
+\definecolor{ny55}{HTML}{F9C31F}
+\definecolor{lg05}{HTML}{0D0D0D}
+\definecolor{lg20}{HTML}{333333}
+\definecolor{lg35}{HTML}{595959}
+\definecolor{lg70}{HTML}{B3B3B3}
+\definecolor{lg95}{HTML}{F2F2F2}
+\definecolor{la95}{HTML}{F5F4EF}
+\definecolor{lasallegreen}{HTML}{087830}
+\colorlet{dlsugreen}{lasallegreen}
+\colorlet{dlsugreen!8}{lasallegreen!8}
+\colorlet{dlsugreen!85!black}{lasallegreen!85!black}
+
+\newcommand{\safeincludegraphics}[2][]{%
+  \adjustimage{max width=\textwidth, #1}{#2}%
 }
 
 \lstset{
-  basicstyle=\ttfamily\footnotesize,
+  language=R,
+  basicstyle=\small\ttfamily,
   breaklines=true,
   breakatwhitespace=true,
-  frame=single,
-  numbers=left,
-  numberstyle=\tiny\color{gray},
+  keepspaces=true,
+  columns=flexible,
+  showstringspaces=false,
   keywordstyle=\color{blue},
-  commentstyle=\color{teal},
-  stringstyle=\color{orange}
+  commentstyle=\color{dlsugreen},
+  stringstyle=\color{purple},
+  backgroundcolor=\color{gray!5},
+  frame=single,
+  framerule=0pt,
+  xleftmargin=10pt,
+  xrightmargin=10pt,
+  aboveskip=15pt,
+  belowskip=15pt
 }
 
-\newcommand{\safeincludegraphics}[2][]{%
-  \IfFileExists{#2}{\includegraphics[#1]{#2}}{\framebox[\linewidth]{Missing Figure: #2}}%
+\tikzset{
+  archbox/.style={
+    rectangle, draw=dlsugreen, fill=dlsugreen!8,
+    rounded corners=4pt, text width=3.0cm, align=center,
+    minimum height=1.1cm, inner sep=4pt
+  },
+  archboxw/.style={
+    rectangle, draw=dlsugreen, fill=dlsugreen!8,
+    rounded corners=4pt, text width=4.5cm, align=center,
+    minimum height=1.1cm, inner sep=4pt
+  },
+  headerbox/.style={
+    rectangle, draw=dlsugreen, fill=dlsugreen, text=white,
+    rounded corners=4pt, text width=3.0cm, align=center,
+    minimum height=0.9cm, inner sep=4pt, font=\small\bfseries
+  },
+  flowbox/.style={
+    rectangle, draw=dlsugreen, fill=dlsugreen!8,
+    rounded corners=4pt, text width=5.5cm, align=center,
+    minimum height=1.0cm, inner sep=5pt, font=\small
+  },
+  arrowstyle/.style={-Stealth, thick, color=dlsugreen!85!black}
 }
 
-\title{\textbf{Portfolio Management and Risk Consultation}\\[0.5em]
-\large FINSTAD Case 2 -- Group 3 (Charlie)}
-\author{
-  CRUZ, Ricardo Miguel Iñigo\\
-  GALEDO, Enrique Lorenzo Hermoso\\
-  SEBALLOS, Josiah Dweyn Panganiban\\
-  SEECHUNG, Camille Castro\\
-  SISON, Aaron Joshua Estacio
-}
-\date{August 17, 2026}
+\titleformat{\section}{\normalfont\Large\bfseries\centering}{\thesection}{1em}{}
+\titleformat{\subsection}{\normalfont\large\bfseries}{\thesubsection}{1em}{}
+\titleformat{\subsubsection}{\normalfont\normalsize\bfseries}{\thesubsubsection}{1em}{}
+\titlespacing*{\section}{0pt}{18pt}{6pt}
+\titlespacing*{\subsection}{0pt}{12pt}{6pt}
+\titlespacing*{\subsubsection}{0pt}{10pt}{4pt}
+\setlength{\bibhang}{0.5in}
+
+\renewcommand{\TPTnoteSettings}{\parshape 1 0pt \linewidth\footnotesize\itshape}
+\newenvironment{safetable}[1][\textwidth]{\begin{adjustbox}{max width=#1,center}}{\end{adjustbox}}
+\newenvironment{largetable}{\begin{landscape}\begin{adjustbox}{max width=\textwidth,center}}{\end{adjustbox}\end{landscape}}
+
+\renewcommand{\topfraction}{0.9}
+\renewcommand{\bottomfraction}{0.9}
+\renewcommand{\textfraction}{0.1}
+\setcounter{topnumber}{3}
+\setcounter{bottomnumber}{3}
+\setcounter{totalnumber}{5}
+
+\clubpenalty=10000
+\widowpenalty=10000
+\displaywidowpenalty=10000
+\urlstyle{same}
+\setcounter{biburlnumpenalty}{100}
+\setcounter{biburlucpenalty}{100}
+\setcounter{biburllcpenalty}{100}
+\allowdisplaybreaks
+\captionsetup{font={small,singlespacing}, labelfont=bf}
+\AtBeginBibliography{\singlespacing}
 
 \begin{document}
+\sloppy
+\doublespacing
+\RaggedRight
+\setlength{\parindent}{0.5in}
 
-\maketitle
+\thispagestyle{empty}
+\begin{titlepage}
+  \centering
+
+  \vspace*{0.4cm}
+  \begin{tabular}{c@{\quad}l}
+    \raisebox{-2.2ex}{\IfFileExists{dlsu_logo.png}{\includegraphics[height=3.5em]{dlsu_logo.png}}{\color{dlsugreen}\rule{3.5em}{3.5em}}} &
+    \huge \textbf{\color{dlsugreen} De La Salle University}
+  \end{tabular}
+
+  \vfill
+
+  \IfFileExists{dlsu_logo.png}{\includegraphics[width=0.22\textwidth]{dlsu_logo.png}}{\color{dlsugreen}\rule{0.22\textwidth}{0.22\textwidth}} \\
+
+  \vfill
+
+  {\large Ramon V. Del Rosario College Of Business}
+
+  \vfill
+
+  {\LARGE \textbf{Portfolio Management and Risk Consultation}} \\[1.5em]
+
+  \begin{minipage}{0.82\textwidth}
+    \centering
+    {\normalsize In partial fulfillment of the requirements for \\%
+    {} \textbf{FINSTAD C01} \\[0.4em]%
+    {} Department of Software Technology \\%
+    {} Term 1, AY 2026--2027}
+  \end{minipage}
+
+  \vfill
+
+  {\normalsize Submitted by:} \\[0.5cm]
+  {\normalsize Cruz, Ricardo Miguel I\~{n}igo} \\
+  {\normalsize Galedo, Enrique Lorenzo} \\
+  {\normalsize Seballos, Josiah Dweyn} \\
+  {\normalsize Seechung, Camille} \\
+  {\normalsize Sison, Aaron Joshua}
+
+  \vfill
+
+  {\normalsize Submitted to:} \\[0.3cm]
+  {\normalsize Prof.\ Bobby Baylon}
+
+  \vfill
+
+  {\normalsize 17 August 2026}
+\end{titlepage}
+
+\newpage
 \tableofcontents
 \newpage
 
-\input{../chapters/01_introduction.tex}
-\newpage
+\input{chapters/00_executive_summary}
+\clearpage
+\input{chapters/01_introduction}
+\clearpage
+\input{chapters/02_data_acquisition}
+\clearpage
+\input{chapters/03_exploratory_data_analysis}
+\clearpage
+\input{chapters/04_portfolio_construction}
+\clearpage
+\input{chapters/05_portfolio_optimization}
+\clearpage
+\input{chapters/06_risk_assessment}
+\clearpage
+\input{chapters/07_recommendation}
+\clearpage
+\input{chapters/08_conclusion}
 
-\input{../chapters/02_data_acquisition.tex}
-\newpage
-
-\input{../chapters/03_exploratory_data_analysis.tex}
-\newpage
-
-\input{../chapters/04_portfolio_construction.tex}
-\newpage
-
-\input{../chapters/05_portfolio_optimization.tex}
-\newpage
-
-\input{../chapters/06_portfolio_risk.tex}
-\newpage
-
-\input{../chapters/07_executive_recommendation.tex}
-\newpage
-
-\input{../chapters/08_references.tex}
-\newpage
-
-\input{../chapters/09_appendix.tex}
+\clearpage
+\nocite{*}
+\printbibliography[title={References}]
 
 \end{document}
