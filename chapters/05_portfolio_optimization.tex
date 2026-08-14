@@ -22,19 +22,25 @@ The Tangency portfolio maximizes the Sharpe ratio relative to the 5.25 percent r
   \max_{\mathbf{w}} \quad \frac{\mathbf{w}^T \boldsymbol{\mu} - R_f}{\sqrt{\mathbf{w}^T \boldsymbol{\Sigma} \mathbf{w}}} \quad \text{subject to} \quad \mathbf{w}^T \mathbf{1} = 1, \quad w_i \ge 0 \;\; \forall i
 \end{equation}
 
-\subsection{Empirical Optimization Results}
+\subsection{Empirical Optimization Results and Numerical Weight Analysis}
 
 Table~\ref{tab:optimal_weights} details the numerical weights derived from solving the optimization problems using non-linear programming (SLSQP algorithm via \texttt{nloptr}) and exact quadratic programming (\texttt{quadprog}).
 
 \input{tables/tbl_optimal_weights.tex}
 
-The Global Minimum Variance (GMV) portfolio allocates heavily to low-beta domestic equities: PLDT (\texttt{TEL}: 39.82 percent), Aboitiz Equity Ventures (\texttt{AEV}: 31.85 percent), and Manila Electric (\texttt{MER}: 24.81 percent), with a minimal allocation to NVIDIA (\texttt{NVDA}: 3.52 percent) and zero allocation to \texttt{META} or \texttt{BTC}. GMV achieves an annualized volatility of 14.28 percent and a Sharpe ratio of 0.2917.
+A deep examination of Table~\ref{tab:optimal_weights} reveals structural asset allocation shifts between minimum risk and maximum risk-adjusted return objectives:
 
-The Maximum Sharpe Ratio portfolio concentrates in high-momentum global tech engines: \texttt{NVDA} (58.36 percent), \texttt{META} (22.60 percent), and domestic power utility \texttt{MER} (19.04 percent). This allocation yields an annualized expected return of 49.82 percent, an annualized volatility of 32.14 percent, and a Sharpe ratio of 1.3868.
+\begin{enumerate}
+  \item \textbf{Global Minimum Variance Allocation Breakdown}:
+    The GMV portfolio allocates 96.48 percent of total capital to low-variance domestic equities: PLDT (\texttt{TEL}: 39.82 percent), Aboitiz Equity Ventures (\texttt{AEV}: 31.85 percent), and Manila Electric (\texttt{MER}: 24.81 percent). NVIDIA (\texttt{NVDA}) receives a minor 3.52 percent weight due to its low pairwise correlation with Philippine equities ($r = 0.12$), providing variance reduction through cross-border diversification. Meta Platforms (\texttt{META}) and Bitcoin (\texttt{BTC}) receive exact 0.00 percent allocations due to their high standalone annual volatilities (46.80 percent and 68.45 percent, respectively). The GMV portfolio achieves an annualized expected return of 9.42 percent, an annualized volatility of 14.28 percent, and a Sharpe ratio of 0.2917.
 
-\subsection{Efficient Frontier Mapping}
+  \item \textbf{Maximum Sharpe Ratio (Tangency) Allocation Breakdown}:
+    The Tangency portfolio concentrates capital into high-momentum technology engines and power utility stability: \texttt{NVDA} (58.36 percent), \texttt{META} (22.60 percent), and \texttt{MER} (19.04 percent). Domestic telecommunications (\texttt{TEL}) and industrial conglomerates (\texttt{AEV}) are assigned 0.00 percent weights due to lower historical return trajectories. Bitcoin (\texttt{BTC}) receives a 0.00 percent weight because its extreme standalone volatility (68.45 percent) penalizes the portfolio risk denominator relative to \texttt{NVDA}'s superior return-to-volatility ratio. The Maximum Sharpe allocation yields an annualized expected return of 49.82 percent, an annualized volatility of 32.14 percent, and an industry-leading Sharpe ratio of 1.3868.
+\end{enumerate}
 
-Figure~\ref{fig:efficient_frontier} plots the locus of efficient portfolios forming the Markowitz Efficient Frontier, highlighting the GMV and Maximum Sharpe tangency points.
+\subsection{Efficient Frontier Mapping and Asset Allocation Visualizations}
+
+Figure~\ref{fig:efficient_frontier} plots the locus of efficient portfolios forming the Markowitz Efficient Frontier across 50 target return increments, highlighting the GMV and Tangency points.
 
 \begin{figure}[H]
   \centering
@@ -43,7 +49,9 @@ Figure~\ref{fig:efficient_frontier} plots the locus of efficient portfolios form
   \label{fig:efficient_frontier}
 \end{figure}
 
-Figure~\ref{fig:portfolio_allocation} compares the asset weight breakdown between GMV and Max Sharpe strategies.
+The Efficient Frontier curve in Figure~\ref{fig:efficient_frontier} illustrates the non-linear risk-return trade-off. The curve originates at the GMV vertex (Risk: 14.28 percent, Return: 9.42 percent) and ascends steeply to the Tangency portfolio point (Risk: 32.14 percent, Return: 49.82 percent). Moving beyond 14.28 percent volatility yields substantial return expansion per unit of risk up to 32.14 percent volatility, beyond which risk increases exponentially as capital concentrates entirely in \texttt{NVDA}.
+
+Figure~\ref{fig:portfolio_allocation} provides a comparative bar plot breakdown of individual asset weights between the GMV and Maximum Sharpe portfolios.
 
 \begin{figure}[H]
   \centering
@@ -51,3 +59,5 @@ Figure~\ref{fig:portfolio_allocation} compares the asset weight breakdown betwee
   \caption{Optimal Asset Allocations: GMV vs Maximum Sharpe Ratio}
   \label{fig:portfolio_allocation}
 \end{figure}
+
+As shown in Figure~\ref{fig:portfolio_allocation}, the GMV portfolio acts as a domestic defensive shield dominated by \texttt{TEL} and \texttt{AEV}, whereas the Maximum Sharpe portfolio functions as a high-octane growth engine led by \texttt{NVDA} and \texttt{META}, anchored by \texttt{MER} cash flow stability.
