@@ -1,6 +1,6 @@
 \section{Portfolio Optimization}
 
-Mean-variance optimization identifies optimal asset allocations along the Markowitz Efficient Frontier by maximizing expected portfolio return for a given level of variance, or minimizing variance for a target expected return.
+Mean-variance optimization identifies optimal asset allocations along the Markowitz Efficient Frontier by maximizing expected portfolio return for a given level of variance or minimizing variance for a target expected return.
 
 \subsection{Optimization Problem Formulation}
 
@@ -16,7 +16,7 @@ The Global Minimum Variance portfolio minimizes total portfolio risk regardless 
 
 \subsubsection{Maximum Sharpe Ratio (Tangency) Portfolio}
 
-The Tangency portfolio maximizes the Sharpe ratio relative to the 5.25\% risk-free rate hurdle:
+The Tangency portfolio maximizes the Sharpe ratio relative to the 5.25 percent risk-free rate hurdle:
 
 \begin{equation}
   \max_{\mathbf{w}} \quad \frac{\mathbf{w}^T \boldsymbol{\mu} - R_f}{\sqrt{\mathbf{w}^T \boldsymbol{\Sigma} \mathbf{w}}} \quad \text{subject to} \quad \mathbf{w}^T \mathbf{1} = 1, \quad w_i \ge 0 \;\; \forall i
@@ -28,9 +28,9 @@ Table~\ref{tab:optimal_weights} details the numerical weights derived from solvi
 
 \input{tables/tbl_optimal_weights.tex}
 
-The Global Minimum Variance (GMV) portfolio allocates heavily to low-beta domestic equities: PLDT (\texttt{TEL}: 39.82\%), Aboitiz Equity Ventures (\texttt{AEV}: 31.85\%), and Manila Electric (\texttt{MER}: 24.81\%), with a minimal allocation to NVIDIA (\texttt{NVDA}: 3.52\%) and zero allocation to \texttt{META} or \texttt{BTC}. GMV achieves an annualized volatility of **14.28\%** and a Sharpe ratio of **0.2917**.
+The Global Minimum Variance (GMV) portfolio allocates heavily to low-beta domestic equities: PLDT (\texttt{TEL}: 39.82 percent), Aboitiz Equity Ventures (\texttt{AEV}: 31.85 percent), and Manila Electric (\texttt{MER}: 24.81 percent), with a minimal allocation to NVIDIA (\texttt{NVDA}: 3.52 percent) and zero allocation to \texttt{META} or \texttt{BTC}. GMV achieves an annualized volatility of 14.28 percent and a Sharpe ratio of 0.2917.
 
-The Maximum Sharpe Ratio portfolio concentrates in high-momentum global tech engines: \texttt{NVDA} (58.36\%), \texttt{META} (22.60\%), and domestic power utility \texttt{MER} (19.04\%). This allocation yields an annualized expected return of **49.82\%**, an annualized volatility of **32.14\%**, and a Sharpe ratio of **1.3868**.
+The Maximum Sharpe Ratio portfolio concentrates in high-momentum global tech engines: \texttt{NVDA} (58.36 percent), \texttt{META} (22.60 percent), and domestic power utility \texttt{MER} (19.04 percent). This allocation yields an annualized expected return of 49.82 percent, an annualized volatility of 32.14 percent, and a Sharpe ratio of 1.3868.
 
 \subsection{Efficient Frontier Mapping}
 
