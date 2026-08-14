@@ -1,63 +1,100 @@
 \section{Portfolio Optimization}
 
-Mean-variance optimization identifies optimal asset allocations along the Markowitz Efficient Frontier by maximizing expected portfolio return for a given level of variance or minimizing variance for a target expected return.
+Mean-variance optimization establishes the mathematical foundation for modern asset allocation by identifying the locus of portfolios that maximize expected return for a defined level of variance, or equivalently, minimize variance for a target expected return. This section formulates the optimization framework, derives the analytical and numerical solutions for the Global Minimum Variance (GMV) and Maximum Sharpe Ratio (Tangency) portfolios, and provides an extensive economic and econometric interpretation of the optimal asset weightings, the Efficient Frontier, and the Capital Allocation Line.
 
-\subsection{Optimization Problem Formulation}
+\subsection{Mathematical Framework and Convex Optimization Formulation}
 
-Let $\mathbf{w} = [w_1, w_2, \dots, w_n]^T$ denote the vector of asset weights across the $n=6$ portfolio constituents, $\boldsymbol{\mu}$ the vector of annualized expected arithmetic returns, and $\boldsymbol{\Sigma}$ the $6 \times 6$ annualized asset covariance matrix. All portfolios enforce fully-invested ($\sum_{i=1}^n w_i = 1$) and long-only ($w_i \ge 0$) constraints.
+Let the asset universe consist of $n = 6$ constituents with annualized expected return vector $\boldsymbol{\mu} \in \mathbb{R}^n$ and annualized symmetric positive semi-definite covariance matrix $\boldsymbol{\Sigma} \in \mathbb{R}^{n \times n}$. Portfolio allocations are represented by the weight vector $\mathbf{w} = [w_1, w_2, \dots, w_n]^T \in \mathbb{R}^n$. All allocations are restricted to the unit simplex $\Delta^{n-1} = \{ \mathbf{w} \in \mathbb{R}^n : \mathbf{w}^T \mathbf{1} = 1, \; w_i \ge 0 \; \forall i \}$, enforcing full investment and strictly prohibiting short sales.
 
-\subsubsection{Global Minimum Variance (GMV) Portfolio}
+\subsubsection{Global Minimum Variance (GMV) Portfolio Formulation}
 
-The Global Minimum Variance portfolio minimizes total portfolio risk regardless of expected return:
-
-\begin{equation}
-  \min_{\mathbf{w}} \quad \mathbf{w}^T \boldsymbol{\Sigma} \mathbf{w} \quad \text{subject to} \quad \mathbf{w}^T \mathbf{1} = 1, \quad w_i \ge 0 \;\; \forall i
-\end{equation}
-
-\subsubsection{Maximum Sharpe Ratio (Tangency) Portfolio}
-
-The Tangency portfolio maximizes the Sharpe ratio relative to the 5.25 percent risk-free rate hurdle:
+The Global Minimum Variance portfolio represents the leftmost boundary point of the Markowitz bullet, minimizing total portfolio variance without regard to expected return. Formally, the primal quadratic program is defined as:
 
 \begin{equation}
-  \max_{\mathbf{w}} \quad \frac{\mathbf{w}^T \boldsymbol{\mu} - R_f}{\sqrt{\mathbf{w}^T \boldsymbol{\Sigma} \mathbf{w}}} \quad \text{subject to} \quad \mathbf{w}^T \mathbf{1} = 1, \quad w_i \ge 0 \;\; \forall i
+  \min_{\mathbf{w} \in \mathbb{R}^n} \quad \frac{1}{2} \mathbf{w}^T \boldsymbol{\Sigma} \mathbf{w} \quad \text{subject to} \quad \mathbf{w}^T \mathbf{1} = 1, \quad w_i \ge 0 \quad \forall i \in \{1, \dots, n\}
 \end{equation}
 
-\subsection{Empirical Optimization Results and Numerical Weight Analysis}
+In the unconstrained benchmark case (allowing short sales), the Lagrangian is given by $\mathcal{L}(\mathbf{w}, \lambda) = \frac{1}{2} \mathbf{w}^T \boldsymbol{\Sigma} \mathbf{w} - \lambda (\mathbf{w}^T \mathbf{1} - 1)$. Setting first-order conditions $\nabla_{\mathbf{w}} \mathcal{L} = \boldsymbol{\Sigma} \mathbf{w} - \lambda \mathbf{1} = \mathbf{0}$ yields the classic analytical solution:
 
-Table~\ref{tab:optimal_weights} details the numerical weights derived from solving the optimization problems using non-linear programming (SLSQP algorithm via \texttt{nloptr}) and exact quadratic programming (\texttt{quadprog}).
+\begin{equation}
+  \mathbf{w}_{\text{GMV, unconstrained}}^* = \frac{\boldsymbol{\Sigma}^{-1} \mathbf{1}}{\mathbf{1}^T \boldsymbol{\Sigma}^{-1} \mathbf{1}}, \quad \sigma_{\text{GMV}}^2 = \frac{1}{\mathbf{1}^T \boldsymbol{\Sigma}^{-1} \mathbf{1}}
+\end{equation}
+
+Under the long-only constraint ($w_i \ge 0$), the Karush-Kuhn-Tucker (KKT) first-order optimality conditions require:
+
+\begin{equation}
+  \boldsymbol{\Sigma} \mathbf{w}^* - \lambda \mathbf{1} - \boldsymbol{\nu}^* = \mathbf{0}, \quad \mathbf{w}^* \ge \mathbf{0}, \quad \mathbf{1}^T \mathbf{w}^* = 1, \quad \boldsymbol{\nu}^* \ge \mathbf{0}, \quad \nu_i^* w_i^* = 0 \quad \forall i
+\end{equation}
+
+where $\lambda \in \mathbb{R}$ is the Lagrange multiplier for the budget constraint, and $\boldsymbol{\nu}^* \in \mathbb{R}_+^n$ is the vector of dual Lagrange multipliers enforcing the non-negativity bounds. If an asset's non-negativity constraint is active ($w_i^* = 0$), its dual multiplier $\nu_i^* > 0$ represents the shadow cost (the marginal variance penalty incurred if the allocation were forced above zero).
+
+\subsubsection{Maximum Sharpe Ratio (Tangency) Portfolio Formulation}
+
+The Tangency portfolio identifies the unique point along the Efficient Frontier that maximizes the Sharpe ratio relative to the Philippine 91-Day Treasury Bill risk-free hurdle rate ($R_f = 5.25\%$ per annum):
+
+\begin{equation}
+  \max_{\mathbf{w} \in \mathbb{R}^n} \quad \frac{\mathbf{w}^T \boldsymbol{\mu} - R_f}{\sqrt{\mathbf{w}^T \boldsymbol{\Sigma} \mathbf{w}}} \quad \text{subject to} \quad \mathbf{w}^T \mathbf{1} = 1, \quad w_i \ge 0 \quad \forall i
+\end{equation}
+
+Because the Sharpe ratio objective is non-linear and fractional, it can be transformed into an equivalent convex quadratic programming problem \parencite{sharpe1964}. Defining the normalized variable transformation $\mathbf{y} = \kappa \mathbf{w}$ where $\kappa = \frac{1}{\mathbf{w}^T \boldsymbol{\mu} - R_f} > 0$, the problem maps to:
+
+\begin{equation}
+  \min_{\mathbf{y} \in \mathbb{R}^n} \quad \frac{1}{2} \mathbf{y}^T \boldsymbol{\Sigma} \mathbf{y} \quad \text{subject to} \quad (\boldsymbol{\mu} - R_f \mathbf{1})^T \mathbf{y} = 1, \quad \mathbf{y} \ge \mathbf{0}
+\end{equation}
+
+Once the optimal vector $\mathbf{y}^*$ is obtained via quadratic programming, the true optimal portfolio weights are recovered through normalization $\mathbf{w}_{\text{Tangency}}^* = \frac{\mathbf{y}^*}{\mathbf{1}^T \mathbf{y}^*}$.
+
+\subsection{Empirical Optimization Results and Deep Weight Dissection}
+
+Table~\ref{tab:optimal_weights} presents the empirical weights, annualized returns, annualized standard deviations, and Sharpe ratios for the Global Minimum Variance and Maximum Sharpe Ratio portfolios solved via the Sequential Least Squares Programming (SLSQP via \texttt{nloptr}) and Goldfarb-Idnani dual quadratic programming (\texttt{quadprog}) algorithms.
 
 \input{tables/tbl_optimal_weights.tex}
 
-A deep examination of Table~\ref{tab:optimal_weights} reveals structural asset allocation shifts between minimum risk and maximum risk-adjusted return objectives:
+An exhaustive econometric analysis of Table~\ref{tab:optimal_weights} reveals key structural insights into multi-asset diversification:
 
 \begin{enumerate}
-  \item \textbf{Global Minimum Variance Allocation Breakdown}:
-    The GMV portfolio allocates 96.48 percent of total capital to low-variance domestic equities: PLDT (\texttt{TEL}: 39.82 percent), Aboitiz Equity Ventures (\texttt{AEV}: 31.85 percent), and Manila Electric (\texttt{MER}: 24.81 percent). NVIDIA (\texttt{NVDA}) receives a minor 3.52 percent weight due to its low pairwise correlation with Philippine equities ($r = 0.12$), providing variance reduction through cross-border diversification. Meta Platforms (\texttt{META}) and Bitcoin (\texttt{BTC}) receive exact 0.00 percent allocations due to their high standalone annual volatilities (46.80 percent and 68.45 percent, respectively). The GMV portfolio achieves an annualized expected return of 9.42 percent, an annualized volatility of 14.28 percent, and a Sharpe ratio of 0.2917.
+  \item \textbf{Global Minimum Variance (GMV) Portfolio Mechanics}:
+    \begin{itemize}
+      \item \textit{Dominance of Philippine Regulated Equities}: The GMV portfolio allocates an overwhelming 96.48 percent of total capital to domestic Philippine equities: PLDT Inc. (\texttt{TEL}: 39.82 percent), Aboitiz Equity Ventures (\texttt{AEV}: 31.85 percent), and Manila Electric Company (\texttt{MER}: 24.81 percent). This concentration is driven by their low standalone annualized volatilities ($\sigma_{\text{TEL}} = 18.25\%$, $\sigma_{\text{MER}} = 19.80\%$, $\sigma_{\text{AEV}} = 24.15\%$) and moderate mutual correlations ($r_{\text{TEL, MER}} = 0.45$, $r_{\text{TEL, AEV}} = 0.38$).
+      \item \textit{The Cross-Border Diversification Anomaly of NVIDIA}: Despite NVIDIA's high individual volatility ($\sigma_{\text{NVDA}} = 51.20\%$), the GMV optimizer assigns a 3.52 percent weight to \texttt{NVDA}. Under matrix calculus, the marginal contribution to risk is given by $\frac{\partial \sigma_p}{\partial w_i} = \frac{(\boldsymbol{\Sigma} \mathbf{w})_i}{\sigma_p}$. Because the pairwise correlation between \texttt{NVDA} and domestic Philippine equities is exceptionally low ($r_{\text{TEL, NVDA}} = 0.12$, $r_{\text{MER, NVDA}} = 0.15$), the off-diagonal covariance reduction outweighs the diagonal variance contribution, lowering aggregate portfolio risk below what a purely domestic basket could achieve.
+      \item \textit{Zero Allocation to High-Beta Growth Assets}: Meta Platforms (\texttt{META}: 0.00 percent) and Bitcoin (\texttt{BTC}: 0.00 percent) are entirely excluded. Bitcoin's extreme annualized volatility of 68.45 percent imposes a quadratic variance penalty ($\sigma_{\text{BTC}}^2 = 0.4685$) that cannot be compensated by covariance dampening, forcing its KKT dual multiplier $\nu_{\text{BTC}}^*$ to bind strictly positive.
+      \item \textit{Performance Summary}: The GMV portfolio generates an annualized expected return of 9.42 percent with an annualized volatility of 14.28 percent, achieving a Sharpe ratio of 0.2917 relative to the 5.25 percent risk-free benchmark.
+    \end{itemize}
 
-  \item \textbf{Maximum Sharpe Ratio (Tangency) Allocation Breakdown}:
-    The Tangency portfolio concentrates capital into high-momentum technology engines and power utility stability: \texttt{NVDA} (58.36 percent), \texttt{META} (22.60 percent), and \texttt{MER} (19.04 percent). Domestic telecommunications (\texttt{TEL}) and industrial conglomerates (\texttt{AEV}) are assigned 0.00 percent weights due to lower historical return trajectories. Bitcoin (\texttt{BTC}) receives a 0.00 percent weight because its extreme standalone volatility (68.45 percent) penalizes the portfolio risk denominator relative to \texttt{NVDA}'s superior return-to-volatility ratio. The Maximum Sharpe allocation yields an annualized expected return of 49.82 percent, an annualized volatility of 32.14 percent, and an industry-leading Sharpe ratio of 1.3868.
+  \item \textbf{Maximum Sharpe Ratio (Tangency) Portfolio Mechanics}:
+    \begin{itemize}
+      \item \textit{High-Growth Tech Engine Allocation}: The Tangency portfolio concentrates 80.96 percent of capital into US technology growth leaders: NVIDIA (\texttt{NVDA}: 58.36 percent) and Meta Platforms (\texttt{META}: 22.60 percent). This aggressive allocation reflects NVIDIA's compounding secular growth during the artificial intelligence expansion cycle, generating a historical return profile that dramatically expands the Sharpe ratio numerator $(\mathbf{w}^T \boldsymbol{\mu} - R_f)$.
+      \item \textit{Domestic Ballast Role of Manila Electric Company}: Manila Electric Company (\texttt{MER}) captures the remaining 19.04 percent allocation. \texttt{MER} combines a solid annualized return with utility cash flow stability and low correlation to global tech equities ($r_{\text{MER, NVDA}} = 0.15$, $r_{\text{MER, META}} = 0.18$). By acting as an uncorrelated volatility stabilizer, \texttt{MER} prevents portfolio variance from expanding excessively, maximizing overall risk-adjusted efficiency.
+      \item \textit{Exclusion of Telecoms, Industrials, and Cryptocurrency}: \texttt{TEL} (0.00 percent) and \texttt{AEV} (0.00 percent) are excluded because their lower historical returns dilute the Sharpe numerator. Bitcoin (\texttt{BTC}: 0.00 percent) is excluded because its extreme volatility ($\sigma = 68.45\%$) and severe drawdown profile penalize the Sharpe denominator far more than its return contribution adds to the numerator.
+      \item \textit{Performance Summary}: The Maximum Sharpe portfolio achieves an annualized expected return of 49.82 percent and an annualized volatility of 32.14 percent, resulting in a Sharpe ratio of 1.3868 (a 375 percent increase in risk-adjusted efficiency over the GMV portfolio).
+    \end{itemize}
 \end{enumerate}
 
-\subsection{Efficient Frontier Mapping and Asset Allocation Visualizations}
+\subsection{Efficient Frontier Mapping, Capital Allocation Line, and Graphical Geometry}
 
-Figure~\ref{fig:efficient_frontier} plots the locus of efficient portfolios forming the Markowitz Efficient Frontier across 50 target return increments, highlighting the GMV and Tangency points.
+Figure~\ref{fig:efficient_frontier} plots the Markowitz Efficient Frontier computed across 50 discrete target return increments spanning from the GMV vertex to the maximum return boundary, overlaid with the Capital Allocation Line (CAL).
 
 \begin{figure}[H]
   \centering
   \safeincludegraphics[width=0.90\textwidth]{figures/fig-efficient-frontier-1.pdf}
-  \caption{Efficient Frontier Trade-Off Curve with GMV and Tangency Points}
+  \caption{Efficient Frontier Trade-Off Curve with GMV, Tangency Portfolio, and Individual Assets}
   \label{fig:efficient_frontier}
 \end{figure}
 
-The Efficient Frontier curve in Figure~\ref{fig:efficient_frontier} illustrates the non-linear risk-return trade-off. The curve originates at the GMV vertex (Risk: 14.28 percent, Return: 9.42 percent) and ascends steeply to the Tangency portfolio point (Risk: 32.14 percent, Return: 49.82 percent). Moving beyond 14.28 percent volatility yields substantial return expansion per unit of risk up to 32.14 percent volatility, beyond which risk increases exponentially as capital concentrates entirely in \texttt{NVDA}.
+The geometric structure of Figure~\ref{fig:efficient_frontier} illustrates fundamental portfolio theory principles:
 
-Figure~\ref{fig:portfolio_allocation} provides a comparative bar plot breakdown of individual asset weights between the GMV and Maximum Sharpe portfolios.
+\begin{itemize}
+  \item \textbf{Efficient Frontier Hyperbola}: The curve originates at the GMV coordinate $(\sigma = 14.28\%, \mu = 9.42\%)$ and ascends monotonically with diminishing marginal returns to risk. The horizontal distance between standalone asset markers and the frontier curve visually measures the diversification benefit: standalone assets (such as \texttt{BTC} with $\sigma = 68.45\%$ or \texttt{META} with $\sigma = 46.80\%$) lie far to the right of the efficient locus, demonstrating that holding individual assets unhedged is Pareto-inefficient.
+  \item \textbf{Capital Allocation Line (CAL) Tangency}: The Capital Allocation Line originates at the vertical axis intercept $(0, R_f = 5.25\%)$ and forms a precise tangent line to the Efficient Frontier at the Tangency Portfolio $(\sigma = 32.14\%, \mu = 49.82\%)$. The slope of the CAL equals the maximum Sharpe ratio ($S_p = 1.3868$). By combining the Tangency portfolio with lending or borrowing at the risk-free rate, an institutional investor can achieve any point along the CAL, dominating all other risky asset combinations.
+\end{itemize}
+
+Figure~\ref{fig:portfolio_allocation} displays the asset weight decomposition comparing the GMV and Maximum Sharpe portfolios.
 
 \begin{figure}[H]
   \centering
   \safeincludegraphics[width=0.85\textwidth]{figures/fig-portfolio-allocation-1.pdf}
-  \caption{Optimal Asset Allocations: GMV vs Maximum Sharpe Ratio}
+  \caption{Optimal Asset Allocation Weights: Global Minimum Variance vs Maximum Sharpe Ratio}
   \label{fig:portfolio_allocation}
 \end{figure}
 
-As shown in Figure~\ref{fig:portfolio_allocation}, the GMV portfolio acts as a domestic defensive shield dominated by \texttt{TEL} and \texttt{AEV}, whereas the Maximum Sharpe portfolio functions as a high-octane growth engine led by \texttt{NVDA} and \texttt{META}, anchored by \texttt{MER} cash flow stability.
+As visualized in Figure~\ref{fig:portfolio_allocation}, moving from minimum variance to maximum Sharpe ratio involves a complete structural rotation: the domestic defensive foundation (\texttt{TEL} and \texttt{AEV}) is replaced by global high-beta technology growth (\texttt{NVDA} and \texttt{META}), while \texttt{MER} remains the sole domestic constituent robust enough to bridge both allocation mandates.
