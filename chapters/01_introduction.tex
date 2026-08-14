@@ -1,31 +1,17 @@
 \section{Introduction}
 
-The multi-asset investment landscape during the sample period from January 2, 2020 through December 31, 2025 presented extraordinary structural regime changes. Global investors weathered the initial black swan liquidity shock of the COVID-19 pandemic, unprecedented fiscal and monetary expansion, subsequent four-decade inflation spikes, aggressive policy rate hikes by the Federal Reserve and Bangko Sentral ng Pilipinas (BSP), an artificial intelligence equity surge, and the institutionalization of digital assets.
+Portfolio management involves allocating funds among different categories of assets to ensure the proper achievement of a balance between expected return and risk. Modern Portfolio Theory provides the baseline theoretical foundation for this process, arguing that investors should evaluate securities portfolios not solely on their individual merits, but on expected returns, volatility, and pairwise covariance with other assets in the portfolio \autocite{markowitz1952}. Diversification assists investors in reducing portfolio risk without an equivalent reduction in expected return when selected assets exhibit imperfect correlations.
 
-Navigating such volatility requires disciplined quantitative portfolio management. Modern Portfolio Theory (MPT), established by Markowitz (1952) and expanded by Sharpe (1964), provides the mathematical framework to optimize return relative to portfolio variance. However, real-world asset returns exhibit heavy tails (leptokurtosis) and volatility clustering, demanding robust downside risk analytics such as Value at Risk (VaR), Expected Shortfall (CVaR), Monte Carlo simulations, and crisis stress testing (Jorion, 2007; Artzner et al., 1999).
+This case study evaluates a diversified portfolio consisting of three Philippine equities: PLDT Inc. (\texttt{TEL}), Manila Electric Company (\texttt{MER}), and Aboitiz Equity Ventures (\texttt{AEV}); two international technology growth equities: NVIDIA Corporation (\texttt{NVDA}) and Meta Platforms, Inc. (\texttt{META}); and one alternative digital asset: Bitcoin (\texttt{BTC}). By combining domestic Philippine equities, Western growth technology stocks, and a cryptocurrency, the asset universe provides a structured framework to evaluate cross-asset, cross-sector, and cross-border diversification benefits. However, individual asset dynamics must be analyzed carefully, as asset volatility varies across market regimes and macro stress periods (Almeida \& Gon\c{c}alves, 2023).
 
-\subsection{Mandate and Assigned Asset Universe}
-
-This report delivers a quantitative portfolio management consultation for Group 3 (Charlie). The assigned asset universe comprises six multi-asset constituents across four distinct asset classes:
-
-\begin{enumerate}
-  \item \textbf{Philippine Equities (Domestic Core):} PLDT Inc. (\texttt{TEL}), Manila Electric Company (\texttt{MER}), and Aboitiz Equity Ventures (\texttt{AEV}).
-  \item \textbf{International Equities (Growth Satellite):} NVIDIA Corporation (\texttt{NVDA}) and Meta Platforms, Inc. (\texttt{META}).
-  \item \textbf{Digital Assets (Alternative Satellite):} Bitcoin (\texttt{BTC}).
-  \item \textbf{Benchmark ETF:} SPDR S\&P 500 ETF Trust (\texttt{SPY}).
-  \item \textbf{Risk-Free Rate Baseline:} Philippine 91-Day Treasury Bill secondary market rate ($R_f = 5.25\%$ per annum benchmark).
-\end{enumerate}
+Using daily price data from January 2, 2020 through December 31, 2025, this study examines the risk and return profile of the multi-asset portfolio benchmarked against the SPDR S\&P 500 ETF Trust (\texttt{SPY}). Daily log return series are evaluated to examine descriptive statistics, distributional shapes, tail risk, and correlation dynamics. The analysis compares static Buy-and-Hold execution against systematic Monthly Rebalancing to determine how periodic re-alignment influences portfolio growth, asset weight drift, and downside risk exposure.
 
 \subsection{Risk-Free Rate Benchmark Specification}
 
-The hurdle rate for all excess return, Sharpe ratio, and tangency portfolio calculations is anchored to the Philippine 91-Day Treasury Bill (3-Month T-Bill) secondary market yield. Quoted at an annualized benchmark rate of $R_f = 5.25\%$, it is converted into a daily log-equivalent rate assuming a 252-trading-day convention:
+The hurdle rate for all excess return, Sharpe ratio, and tangency portfolio calculations is anchored to the Philippine 91-Day Treasury Bill (3-Month T-Bill) secondary market yield. Quoted at an annualized benchmark rate of $R_f = 5.25\%$, it is converted into a daily log-equivalent rate assuming a 252-trading-day annual convention:
 
 \begin{equation}
   r_{f,\text{daily}} = \frac{\ln(1 + R_f)}{252} = \frac{\ln(1 + 0.0525)}{252} \approx 0.00020307 \quad (0.0203\% \text{ per day})
 \end{equation}
 
-This hurdle rate represents the riskless return baseline earned by domestic institutional capital.
-
-\subsection{Report Organization}
-
-The remainder of this report is structured as follows: Section 2 details data acquisition, FX conversion, calendar alignment, and missing value treatment. Section 3 conducts exploratory financial analysis and distributional diagnostics. Section 4 evaluates Buy-and-Hold versus Monthly Rebalanced equal-weighted portfolios. Section 5 solves for the Efficient Frontier, Global Minimum Variance (GMV), and Maximum Sharpe Ratio portfolios. Section 6 assesses downside risk via VaR, Expected Shortfall, Monte Carlo simulations, and stress testing. Section 7 presents executive investment recommendations. Section 8 lists references, and Section 9 contains the complete R code appendix.
+This hurdle rate represents the riskless baseline return earned by domestic institutional capital.
