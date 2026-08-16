@@ -29,7 +29,20 @@ Thumbs.db
 *.aux
 *.out
 *.synctex.gz
+*.bbl
+*.bcf
+*.bcf-SAVE-ERROR
+*.blg
+*.fdb_latexmk
+*.fls
+*.run.xml
+*.toc
 reports/finstad_analysis.tex
 .pi-subagents
 R/__pycache__
 .Rprofile
+# Downloaded source archive and orchestration artifacts
+FINSTAD_Case_2 (OVERLEAD.zip
+taskflow.checkpoint.md
+taskflow.jsonl
+FINSTAD_Case2_Swarm_Audit_Checklist.md

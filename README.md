@@ -20,21 +20,21 @@ Group 3 Charlie evaluates the following seven asset classes over the sample peri
 
 | Report Section / Task | Assigned Team Member | Status | LaTeX / Overleaf | Output Files |
 | --- | --- | --- | --- | --- |
-| Introduction | Iñigo | Scheduled | Included, placeholder | TBD |
+| Introduction | Iñigo | Completed | Included, full chapter | `chapters/01_introduction.tex` |
 | Data Acquisition and Preparation | Aaron | Completed | Included, full chapter | `chapters/02_data_acquisition.tex`, `tbl_data_summary.tex` |
 | Exploratory Data Analysis (EDA) | Aaron and Enrique | Completed | Included, full chapter | `chapters/03_exploratory_data_analysis.tex`, `tbl_desc_stats.tex`, `tbl_correlation.tex`, 6 vector plots |
 | Portfolio Construction and Evaluation | Aaron | Completed | Included, full chapter | `chapters/04_portfolio_construction.tex`, `fig-portfolio-growth-1.pdf`, `fig-rebalanced-weights-1.pdf` |
-| Portfolio Optimization | Aaron and Josiah | Completed | Included, placeholder (analysis in qmd) | `reports/finstad_analysis.qmd` |
-| Portfolio Risk Assessment | Team (Josiah) | Completed | Included, placeholder (analysis in qmd) | `reports/finstad_analysis.qmd` |
-| Executive Investment Recommendation | Iñigo | Scheduled | Included, placeholder | TBD |
-| Conclusion | Camille | Scheduled | Chapter not created yet | TBD |
+| Portfolio Optimization | Aaron and Josiah | Completed | Included, full chapter | `reports/finstad_analysis.qmd`, `chapters/05_portfolio_optimization.tex`, `tbl_optimal_weights.tex` |
+| Portfolio Risk Assessment | Team (Josiah) | Completed | Included, full chapter | `reports/finstad_analysis.qmd`, `chapters/06_risk_assessment.tex`, `tbl_var_summary.tex` |
+| Executive Investment Recommendation | Iñigo | Completed | Included, full chapter | `chapters/07_recommendation.tex` |
 | Executive Presentation | Team | Scheduled | N/A (recorded deliverable) | TBD |
 
 ## Workspace Directory Layout
 
 - `data/` contains raw asset price CSV files and the compiled master dataset.
 - `R/` contains R script data acquisition pipelines and analytical routines.
-- `reports/` contains the LaTeX report source files and figures.
+- `reports/finstad_analysis.qmd` is the sole canonical analysis document; it renders to `reports/finstad_analysis.pdf`.
+- `overleaf_project/` is the folder uploaded to the existing Overleaf project; it contains the manuscript tree (`main.tex`, `chapters/`, `tables/`, `figures/`, `references.bib`) and the compiled `main.pdf`.
 - `guidelines.md` contains the formal assignment prompt and scoring rubric.
 
 ## Data Acquisition and Running R Scripts
