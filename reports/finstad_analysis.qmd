@@ -83,11 +83,8 @@ library(scales)
 library(xts)
 library(zoo)
 library(PerformanceAnalytics)
-library(PortfolioAnalytics)
 
 # Solvers for portfolio optimization
-library(ROI)
-library(ROI.plugin.quadprog)
 library(nloptr) 
 library(quadprog)
 
@@ -106,17 +103,17 @@ This quantitative consultation report evaluates portfolio construction, optimiza
 
 ### Key Empirical Findings
 
-1. **Portfolio Construction & Rebalancing Discipline**: An un-rebalanced Buy-and-Hold equal-weighted strategy delivered high nominal cumulative returns driven by massive asset weight drift into NVDA and BTC. However, monthly rebalancing significantly controlled portfolio volatility (down from 32.4% to 22.8% annualized) and contained peak drawdown (reduced from -61.2% to -48.5%), providing a far superior risk-adjusted profile.
+1. **Portfolio Construction & Rebalancing Discipline**: An un-rebalanced Buy-and-Hold equal-weighted strategy delivered a cumulative return of 743.04% (42.83% CAGR) driven by massive asset weight drift into NVDA (61.75% of the portfolio by December 2025) and BTC (24.77%). Monthly rebalancing cut annualized volatility from 35.12% to 24.18% and contained the peak drawdown from -58.21% to -43.20%, at the cost of lower cumulative return (384.85%, 30.21% CAGR); the Sharpe ratio was marginally lower under rebalancing (1.0325 versus 1.0700).
 2. **Mean-Variance Portfolio Optimization**:
-   - **Global Minimum Variance (GMV)**: Heavily allocates to low-beta domestic equities (TEL: 39.8%, AEV: 31.9%, MER: 24.8%) with zero allocation to BTC and minimal international tech exposure. GMV achieves an annualized volatility of **14.28%** and a Sharpe ratio of **0.2917**.
-   - **Maximum Sharpe Ratio (Tangency Portfolio)**: Concentrates heavily in high-performing international growth engines (NVDA: 58.4%, META: 22.6%, MER: 19.0%), yielding an annualized return of **49.82%**, volatility of **32.14%**, and a industry-leading Sharpe ratio of **1.3868**.
+   - **Global Minimum Variance (GMV)**: Allocates 79.09% of capital to domestic Philippine equities (TEL: 31.01%, MER: 31.23%, AEV: 16.85%) with modest international tech exposure (NVDA: 3.15%, META: 12.86%) and 4.90% in BTC. GMV achieves an annualized return of **16.03%**, volatility of **20.22%**, and a Sharpe ratio of **0.5332**.
+   - **Maximum Sharpe Ratio (Tangency Portfolio)**: Concentrates in high-performing international growth engines (NVDA: 55.44%, BTC: 26.14%) plus MER (18.42%), with zero weights in TEL, AEV, and META, yielding an annualized return of **58.10%**, volatility of **38.25%**, and a Sharpe ratio of **1.3815**.
 3. **Tail Risk & Stress Testing Resilience**: 
-   - Daily 95% Historical Value at Risk (VaR) ranges from **-1.32%** (GMV) to **-2.61%** (Max Sharpe), while 95% Historical Expected Shortfall (CVaR) reaches **-2.14%** (GMV) and **-4.12%** (Max Sharpe).
-   - Under historical crisis simulations (2020 COVID Crash, 2022 Crypto Winter, 2022 Fed Rate Hike), the GMV portfolio demonstrates exceptional resilience (maximum shock loss of -13.8%), whereas the Max Sharpe portfolio incurs severe instantaneous drawdowns (-29.8% in COVID crash, -44.7% in a 1.5x Black Swan event).
+   - Daily 95% Historical Value at Risk (VaR) is **-1.80%** (GMV) and **-3.39%** (Max Sharpe), while 95% Historical Expected Shortfall (CVaR) reaches **-2.85%** (GMV) and **-5.11%** (Max Sharpe).
+   - Under historical crisis simulations (2020 COVID Crash, 2022 Crypto Winter, 2022 Fed Rate Hike), the GMV portfolio demonstrates resilience with a maximum historical shock loss of -22.55%, whereas the Max Sharpe portfolio incurs severe instantaneous drawdowns (-28.83% in the COVID crash, -45.30% in a 1.5x Black Swan event).
 
 ### Executive Recommendation
 
-We advise establishing a **Core-Satellite Allocation (60% Max Sharpe / 40% GMV tilt)** with mandatory **monthly systematic rebalancing**. This hybrid structure captures substantial equity growth (target return ~33.5%, Sharpe ratio ~1.05) while enforcing strict risk budget limits (< 2.20% daily 95% VaR) and capital protection during adverse macroeconomic shocks.
+We recommend the **Maximum Sharpe portfolio** (NVDA: 55.44%, BTC: 26.14%, MER: 18.42%) for investors with a high tolerance for volatility and drawdown, executed with **monthly systematic rebalancing**. With an expected return of **58.10%**, volatility of **38.25%**, and a Sharpe ratio of **1.3815** at a 5.25% risk-free rate, it is the most attractive risk-adjusted allocation in the universe. For investors prioritizing capital preservation, the **GMV portfolio** (TEL: 31.01%, MER: 31.23%, AEV: 16.85%, NVDA: 3.15%, META: 12.86%, BTC: 4.90%) is the defensive alternative, with 20.22% volatility, a daily 95% Historical VaR of -1.80%, and a maximum historical stress loss of -22.55%.
 
 # Introduction
 
@@ -240,6 +237,18 @@ stats_df <- as.data.frame(stats_mat) %>%
 
 kbl(stats_df, booktabs = TRUE, digits = 4) %>%
   kable_styling(latex_options = c("striped", "hold_position", "scale_down"), bootstrap_options = c("striped", "hover"))
+```
+
+```{r}
+#| label: tbl-benchmark-stats
+#| tbl-cap: "SPY Benchmark Descriptive Statistics (Daily Log Returns, Jan 2, 2020 -- Dec 31, 2025)"
+
+benchmark_stats_df <- as.data.frame(table.Stats(returns_xts_eda[, "SPY"])) %>%
+  rownames_to_column(var = "Metric") %>%
+  filter(Metric %in% c("Observations", "Arithmetic Mean", "Stdev", "Skewness", "Kurtosis", "Minimum", "Maximum")) %>%
+  mutate(Metric = recode(Metric, "Arithmetic Mean" = "Mean"))
+
+safe_kable(benchmark_stats_df, caption = "SPY Benchmark Descriptive Statistics (Daily Log Returns, Jan 2, 2020 -- Dec 31, 2025)")
 ```
 
 ## Quantitative Design System (QVRS Theme & Colors)
@@ -558,6 +567,50 @@ perf_summary_df <- rbind(
 safe_kable(perf_summary_df, caption = "Portfolio Performance Summary Comparison (Jan 2, 2020 -- Dec 31, 2025)")
 ```
 
+## Calendar-Year Return Decomposition
+
+```{r}
+#| label: tbl-calendar-returns-strategies
+#| tbl-cap: "Calendar-Year Strategy Returns (Simple Returns, 2020--2025)"
+
+yearly_ret <- function(r_series, yr) {
+  rr <- r_series[format(index(r_series), "%Y") == yr]
+  as.numeric(tail(cumprod(1 + rr), 1)) - 1
+}
+
+cyr_strategy_df <- do.call(rbind, lapply(2020:2025, function(yr) {
+  data.frame(
+    Year = yr,
+    `Buy & Hold` = sprintf("%.2f%%", yearly_ret(r_bnh, yr) * 100),
+    `Monthly Rebalanced` = sprintf("%.2f%%", yearly_ret(r_reb, yr) * 100),
+    `SPY Benchmark` = sprintf("%.2f%%", yearly_ret(ret_smp[, "SPY"], yr) * 100),
+    check.names = FALSE
+  )
+}))
+
+safe_kable(cyr_strategy_df, caption = "Calendar-Year Strategy Returns (Simple Returns, 2020--2025)")
+```
+
+```{r}
+#| label: tbl-calendar-returns-assets
+#| tbl-cap: "Calendar-Year Asset Returns (Simple Returns, 2020--2025)"
+
+cyr_asset_df <- do.call(rbind, lapply(2020:2025, function(yr) {
+  data.frame(
+    Year = yr,
+    TEL = sprintf("%.2f%%", yearly_ret(ret_smp[, "TEL"], yr) * 100),
+    MER = sprintf("%.2f%%", yearly_ret(ret_smp[, "MER"], yr) * 100),
+    AEV = sprintf("%.2f%%", yearly_ret(ret_smp[, "AEV"], yr) * 100),
+    NVDA = sprintf("%.2f%%", yearly_ret(ret_smp[, "NVDA"], yr) * 100),
+    META = sprintf("%.2f%%", yearly_ret(ret_smp[, "META"], yr) * 100),
+    BTC = sprintf("%.2f%%", yearly_ret(ret_smp[, "BTC"], yr) * 100),
+    check.names = FALSE
+  )
+}))
+
+safe_kable(cyr_asset_df, caption = "Calendar-Year Asset Returns (Simple Returns, 2020--2025)")
+```
+
 ## Cumulative Portfolio Growth Comparison
 
 ```{r}
@@ -650,7 +703,6 @@ w0 <- rep(1 / n_assets, n_assets)
 ```
 
 ```{r}
-# --- Objective 1: portfolio variance (minimized for GMV and each Efficient Frontier point) ---
 eval_f_var <- function(w) {
   as.numeric(t(w) %*% Sigma_ann %*% w)
 }
@@ -659,7 +711,6 @@ eval_grad_f_var <- function(w) {
   nl.grad(w, eval_f_var)
 }
 
-# --- Objective 2: negative Sharpe ratio (minimized to find the tangency / Max Sharpe portfolio) ---
 eval_f_sharpe <- function(w) {
   port_ret <- sum(w * mu_ann)
   port_sd  <- sqrt(as.numeric(t(w) %*% Sigma_ann %*% w))
@@ -670,7 +721,6 @@ eval_grad_f_sharpe <- function(w) {
   nl.grad(w, eval_f_sharpe)
 }
 
-# --- Constraint: weights must sum to 1 (fully invested, no cash drag) ---
 eval_g_eq_sum1 <- function(w) {
   sum(w) - 1
 }
@@ -688,7 +738,7 @@ opt_settings <- list(
 ```
 
 ```{r}
-# --- Global Minimum Variance (GMV) Portfolio ---
+
 gmv_solution <- nloptr(
   x0            = w0,
   eval_f        = eval_f_var,
@@ -708,7 +758,7 @@ gmv_sd  <- sqrt(as.numeric(t(w_gmv) %*% Sigma_ann %*% w_gmv))
 ```
 
 ```{r}
-# --- Maximum Sharpe Ratio (Tangency) Portfolio ---
+
 sharpe_solution <- nloptr(
   x0            = w0,
   eval_f        = eval_f_sharpe,
@@ -729,7 +779,6 @@ sharpe_val <- (sharpe_ret - rf_annual) / sharpe_sd
 ```
 
 ```{r}
-# --- Efficient Frontier: sweep target returns, solve exact QP via quadprog ---
 target_returns <- seq(min(mu_ann), max(mu_ann), length.out = 50)
 frontier_list  <- vector("list", length(target_returns))
 
@@ -833,6 +882,33 @@ ggplot(weights_long_df, aes(x = Asset, y = Weight, fill = Asset)) +
   theme(legend.position = "none")
 ```
 
+```{r}
+#| label: cal-calibration-outputs
+# Running-peak drawdown dates: depth measured from the running maximum wealth
+# preceding the deepest trough, matching the reported max drawdown magnitudes.
+dd_dates <- function(r_series) {
+  w <- cumprod(1 + as.numeric(r_series))
+  runmax <- cummax(w)
+  dd <- w / runmax - 1
+  t <- which.min(dd)
+  p <- which.max(w[1:t])
+  c(depth = sprintf("%.2f%%", dd[t] * 100), peak = format(index(r_series)[p]), trough = format(index(r_series)[t]))
+}
+
+bnh_dd <- dd_dates(r_bnh)
+reb_dd <- dd_dates(r_reb)
+
+nvda_peak_w <- max(weights_bnh[, "NVDA"])
+nvda_peak_d <- format(index(weights_bnh)[which.max(weights_bnh[, "NVDA"])])
+
+ann_vol_sigma <- sqrt(diag(Sigma_ann))
+
+cat("Buy & Hold max drawdown:", bnh_dd["depth"], "peak", bnh_dd["peak"], "trough", bnh_dd["trough"], "\n")
+cat("Monthly Rebalanced max drawdown:", reb_dd["depth"], "peak", reb_dd["peak"], "trough", reb_dd["trough"], "\n")
+cat("Buy & Hold NVDA weight peak:", sprintf("%.2f%%", nvda_peak_w * 100), "on", nvda_peak_d, "\n")
+cat("Annualized volatility from optimization covariance (simple daily returns x 252):", paste(sprintf("%s %.2f%%", names(ann_vol_sigma), ann_vol_sigma * 100), collapse = ", "), "\n")
+```
+
 # Portfolio Risk Assessment (VaR, CVaR, Monte Carlo, Stress Testing)
 
 ```{r portfolio-risk}
@@ -853,7 +929,6 @@ port_returns_sharpe <- Return.portfolio(
 #| label: tbl-var-summary
 #| tbl-cap: "Historical and Parametric VaR / CVaR Summary (Daily, 95% and 99% Confidence)"
 
-# --- Compute Individual VaR and ES Metrics ---
 v_hist_gmv_95 <- abs(as.numeric(VaR(port_returns_gmv, p = 0.95, method = "historical")))
 v_hist_gmv_99 <- abs(as.numeric(VaR(port_returns_gmv, p = 0.99, method = "historical")))
 v_para_gmv_95 <- abs(as.numeric(VaR(port_returns_gmv, p = 0.95, method = "gaussian")))
@@ -1035,23 +1110,15 @@ ggplot(stress_long_df, aes(x = reorder(Scenario, Impact), y = Impact, fill = Por
 
 # Executive Investment Recommendation
 
-Based on rigorous quantitative evaluation of Group 3's asset universe over the 2020--2025 sample period, we present actionable investment guidelines for institutional portfolio implementation:
+Based on the portfolio optimization, historical performance, downside-risk measures, and stress-testing results, the Maximum Sharpe Ratio portfolio is recommended. The portfolio allocates 55.44 percent to NVIDIA (NVDA), 26.14 percent to Bitcoin (BTC), and 18.42 percent to Manila Electric Company (MER), delivering an expected annual return of 58.10 percent, an annualized volatility of 38.25 percent, and a Sharpe ratio of 1.3815 at the 5.25 percent risk-free rate, the highest risk-adjusted profile in the feasible universe. @fig-portfolio-allocation contrasts this allocation with the GMV portfolio, and @fig-efficient-frontier locates it at the tangency point of the efficient frontier.
 
-### 1. Core-Satellite Allocation Framework
+NVIDIA contributes the strongest sample-period expected return (71.65 percent annualized) and, together with Bitcoin (61.49 percent annualized), drives the portfolio's return profile. Bitcoin's inclusion rests on its high expected return and its low correlation with the Philippine constituents (MER--BTC 0.0286), while NVIDIA pairs with the domestic block at near-zero correlation (MER--NVDA 0.0121, MER--META 0.0172) and at moderate co-movement with Bitcoin (NVDA--BTC 0.3204). Manila Electric Company anchors the allocation as the sole domestic constituent, combining a positive expected return (12.49 percent annualized) with near-zero correlation to both growth assets. TEL, AEV, and META receive zero weight in the long-only tangency solution.
 
-We recommend establishing a **60% Max Sharpe / 40% GMV Hybrid Portfolio**. 
-- **Rationale**: Relying solely on the Maximum Sharpe portfolio creates heavy concentration in NVDA (58.4%) and META (22.6%), exposing the fund to severe single-stock drawdown risk (-29.8% in COVID crash, -44.7% in Black Swan). Blending 40% GMV introduces stabilizing domestic equities (TEL, MER, AEV), dampening portfolio volatility from 32.14% down to ~21.5% while maintaining an attractive target annual return of ~33.5% (Sharpe Ratio ~1.05).
+Downside risk is governed by the empirical tail measures reported in @tbl-var-summary. The recommended portfolio's daily 95 percent Historical VaR is -3.39 percent and its 95 percent Historical Expected Shortfall is -5.11 percent; at the 99 percent level these reach -5.64 percent and -8.55 percent. The empirical 99 percent Expected Shortfall (8.55 percent) exceeds the Gaussian parametric estimate (6.19 percent) by 236 basis points per day, so historical measures, rather than the normal approximation, should set the risk budget.
 
-### 2. Execution Discipline & Rebalancing Frequency
+Stress testing confirms the trade-off between return and capital preservation. Under the five scenarios in @fig-stress-test and @tbl-stress-summary, the Maximum Sharpe portfolio loses 28.83 percent in the 2020 COVID crash, 24.58 percent in the technology-sector selloff, 18.65 percent in the 2022 rate-hike shock, and 14.40 percent in the 2022 crypto winter, with a -45.30 percent loss under the hypothetical 1.5x Black Swan scenario. The GMV portfolio contains the same shocks at materially smaller magnitudes (-22.55 percent COVID, -35.89 percent Black Swan), illustrating its role as the defensive alternative.
 
-- **Mandatory Rebalancing Schedule**: Execute systematic **monthly rebalancing**.
-- **Empirical Justification**: As demonstrated in Section 4, un-rebalanced Buy-and-Hold portfolios suffer from severe weight drift—allowing volatile assets like BTC and NVDA to dominate total risk. Monthly rebalancing caps tail risk, systematically trims outperforming assets at high valuations, and redeems underperforming constituents to harvest the rebalancing premium.
-
-### 3. Risk Governance & Tail Risk Limits
-
-- **Daily VaR Limit**: Enforce a maximum Daily 95% Historical VaR budget of **2.20%**.
-- **Expected Shortfall Monitoring**: Track 95% CVaR continuously. If daily portfolio loss exceeds **-3.50%**, trigger dynamic risk reduction (temporarily shifting satellite growth weights into PH T-Bills or GMV assets).
-- **Stress Liquidity Buffer**: Maintain a minimum 5% liquidity reserve in 91-Day Philippine T-Bills to absorb capital drawdowns during systemic shocks without forced asset liquidations.
+Disciplined monthly rebalancing is required to manage the portfolio's concentration: NVDA and BTC together represent 81.58 percent of the recommended allocation, and un-rebalanced equal-weight exposure drifted to 61.75 percent NVDA and 24.77 percent BTC by December 2025. Over the sample, monthly rebalancing reduced volatility from 35.12 percent to 24.18 percent and the peak drawdown from -58.21 percent to -43.20 percent at the cost of cumulative return (384.85 percent versus 743.04 percent). For investors prioritizing capital preservation, the GMV portfolio allocates TEL 31.01 percent, MER 31.23 percent, AEV 16.85 percent, NVDA 3.15 percent, META 12.86 percent, and BTC 4.90 percent, delivering a 16.03 percent expected return at 20.22 percent volatility (Sharpe 0.5332). Portfolio choice ultimately reflects the investor's willingness and capacity to bear losses: the Maximum Sharpe portfolio suits investors seeking higher returns despite greater risk, while the GMV portfolio suits investors who cannot tolerate peak stress losses near -45 percent.
 
 # References
 
@@ -1065,9 +1132,7 @@ We recommend establishing a **60% Max Sharpe / 40% GMV Hybrid Portfolio**.
 # Appendix: Complete R Analysis Code
 
 ```r
-# ==============================================================================
 # FINSTAD Case 2 Group 3 (Charlie) Complete Portfolio & Risk Pipeline
-# ==============================================================================
 
 library(tidyverse)
 library(lubridate)
@@ -1075,12 +1140,10 @@ library(scales)
 library(xts)
 library(zoo)
 library(PerformanceAnalytics)
-library(PortfolioAnalytics)
 library(nloptr)
 library(quadprog)
 library(MASS)
 
-# 1. Load Data
 raw_data <- read_csv("../data/master_dataset.csv", show_col_types = FALSE) %>%
   mutate(Date = as.Date(Date)) %>%
   filter(Date >= as.Date("2020-01-02") & Date <= as.Date("2025-12-31")) %>%
@@ -1093,27 +1156,22 @@ prices_mat <- as.matrix(raw_data[, asset_cols])
 prices_xts <- xts(prices_mat, order.by = raw_data[["Date"]])
 prices_carried <- na.locf(prices_xts)
 
-# Log Returns
 returns_xts_carried <- Return.calculate(prices_carried, method = "log")[-1, ]
 asset_returns_carried <- returns_xts_carried[, portfolio_assets]
 
-# Simple Returns for Portfolio Analytics
 ret_smp <- exp(returns_xts_carried) - 1
 asset_returns_smp <- ret_smp[, portfolio_assets]
 
-# 2. Portfolio Construction (Equal Weight)
 w_eq <- rep(1 / 6, 6)
 names(w_eq) <- portfolio_assets
 
 port_bnh <- Return.portfolio(R = asset_returns_smp, weights = w_eq)
 port_reb <- Return.portfolio(R = asset_returns_smp, weights = w_eq, rebalance_on = "months")
 
-# 3. Mean-Variance Optimization
 mu_ann    <- colMeans(asset_returns_smp, na.rm = TRUE) * 252
 Sigma_ann <- cov(asset_returns_smp, use = "pairwise.complete.obs") * 252
 rf_annual <- 0.0525
 
-# GMV Portfolio
 eval_f_var <- function(w) as.numeric(t(w) %*% Sigma_ann %*% w)
 eval_grad_f_var <- function(w) nl.grad(w, eval_f_var)
 eval_g_eq <- function(w) sum(w) - 1
@@ -1127,7 +1185,6 @@ gmv_sol <- nloptr(x0 = w0, eval_f = eval_f_var, eval_grad_f = eval_grad_f_var,
 w_gmv <- gmv_sol$solution
 names(w_gmv) <- portfolio_assets
 
-# Max Sharpe Portfolio
 eval_f_sharpe <- function(w) {
   p_ret <- sum(w * mu_ann)
   p_sd  <- sqrt(as.numeric(t(w) %*% Sigma_ann %*% w))
@@ -1142,7 +1199,6 @@ shp_sol <- nloptr(x0 = w0, eval_f = eval_f_sharpe, eval_grad_f = eval_grad_f_sha
 w_sharpe <- shp_sol$solution
 names(w_sharpe) <- portfolio_assets
 
-# 4. Risk Analytics (VaR / CVaR / Monte Carlo)
 port_ret_gmv <- Return.portfolio(R = asset_returns_smp, weights = w_gmv, rebalance_on = "months")
 port_ret_shp <- Return.portfolio(R = asset_returns_smp, weights = w_sharpe, rebalance_on = "months")
 

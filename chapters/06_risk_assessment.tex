@@ -22,7 +22,7 @@ Non-parametric Historical VaR is calculated directly from the empirical quantile
   \text{VaR}_\alpha^{\text{Hist}}(\mathbf{w}) = -\widehat{F}_n^{-1}(1 - \alpha) = -R_{(\lfloor N(1-\alpha) \rfloor)}
 \end{equation}
 
-where $R_{(k)}$ denotes the $k$-th order statistic across the $N = 1,509$ daily trading observations.
+where $R_{(k)}$ denotes the $k$-th order statistic across the $N = 1,507$ daily trading observations.
 
 Parametric Gaussian VaR assumes that portfolio returns follow a stationary normal distribution $\mathbf{r} \sim \mathcal{N}(\boldsymbol{\mu}_{\text{daily}}, \boldsymbol{\Sigma}_{\text{daily}})$:
 
@@ -52,27 +52,27 @@ where $\phi(\cdot)$ is the standard normal probability density function and $\si
 
 \subsection{Comparative Empirical Tail Risk and Underestimation Bias}
 
-Table~\ref{tab:var_summary} reports the daily 95 percent and 99 percent Historical and Parametric VaR and Expected Shortfall metrics across the 1,509 daily trading observations for the GMV and Maximum Sharpe Ratio portfolios.
+Table~\ref{tab:var_summary} reports the daily 95 percent and 99 percent Historical and Parametric VaR and Expected Shortfall metrics across the 1,507 daily trading observations for the GMV and Maximum Sharpe Ratio portfolios.
 
 \input{tables/tbl_var_summary.tex}
 
 The empirical metrics in Table~\ref{tab:var_summary} reveal substantial divergence in downside vulnerability between the two portfolio allocations.
 
-The Global Minimum Variance portfolio demonstrates exceptional downside containment. Over a daily horizon, its 95 percent Historical VaR is limited to 1.32 percent, with an Expected Shortfall of 2.14 percent. Under extreme 99 percent tail conditions, the GMV portfolio experiences a Historical VaR of 2.21 percent and an Expected Shortfall of 3.12 percent per day. Comparing the Historical metrics against Parametric Gaussian estimates ($\text{VaR}_{95} = 1.41\%$, $\text{ES}_{95} = 1.82\%$) confirms that the domestic utility and telecom allocation (\texttt{TEL}, \texttt{AEV}, \texttt{MER}) exhibits stable, near-Gaussian return behavior with minimal tail risk amplification.
+The Global Minimum Variance portfolio demonstrates exceptional downside containment. Over a daily horizon, its 95 percent Historical VaR is limited to 1.80 percent, with an Expected Shortfall of 2.85 percent. Under extreme 99 percent tail conditions, the GMV portfolio experiences a Historical VaR of 3.27 percent and an Expected Shortfall of 4.67 percent per day. Comparing the Historical metrics against Parametric Gaussian estimates ($\text{VaR}_{95} = 2.03\%$, $\text{ES}_{95} = 2.56\%$) confirms that the domestic utility and telecom allocation (\texttt{TEL}, \texttt{AEV}, \texttt{MER}) exhibits stable, near-Gaussian return behavior with minimal tail risk amplification.
 
-Conversely, the Maximum Sharpe Ratio portfolio exhibits severe tail vulnerability driven by its 80.96 percent aggregate concentration in US growth equities (\texttt{NVDA}: 58.36 percent, \texttt{META}: 22.60 percent). Its daily 95 percent Historical VaR reaches 2.61 percent (nearly double that of the GMV portfolio), while its 95 percent Expected Shortfall expands to 4.12 percent. At the 99 percent confidence level, the Maximum Sharpe portfolio incurs a Historical VaR of 4.58 percent and an empirical Expected Shortfall of 6.25 percent per day.
+Conversely, the Maximum Sharpe Ratio portfolio exhibits severe tail vulnerability driven by its 81.58 percent aggregate concentration in NVIDIA and Bitcoin (\texttt{NVDA}: 55.44 percent, \texttt{BTC}: 26.14 percent). Its daily 95 percent Historical VaR reaches 3.39 percent (nearly double that of the GMV portfolio), while its 95 percent Expected Shortfall expands to 5.11 percent. At the 99 percent confidence level, the Maximum Sharpe portfolio incurs a Historical VaR of 5.64 percent and an empirical Expected Shortfall of 8.55 percent per day.
 
-Crucially, the empirical 99 percent Expected Shortfall (6.25 percent) exceeds the Gaussian parametric prediction (5.21 percent) by 104 basis points per day, representing a 19.96 percent relative underestimation error. This discrepancy demonstrates the presence of pronounced negative tail jumps in technology equities, proving that conventional Gaussian risk models dangerously understate actual capital requirements during severe market corrections.
+Crucially, the empirical 99 percent Expected Shortfall (8.55 percent) exceeds the Gaussian parametric prediction (6.19 percent) by 236 basis points per day, representing a 38.1 percent relative underestimation error. This discrepancy demonstrates the presence of pronounced negative tail jumps in technology and cryptocurrency positions, proving that conventional Gaussian risk models dangerously understate actual capital requirements during severe market corrections.
 
 \subsection{Multivariate Monte Carlo Return Simulation and Density Geometry}
 
-To evaluate potential return trajectories beyond the observed historical sample, a 10,000-draw Monte Carlo simulation was executed using the multivariate normal covariance structure of the six assets. Synthetic return vectors $\mathbf{r}_{\text{sim}} \in \mathbb{R}^6$ were generated via the Cholesky factorization $\boldsymbol{\Sigma}_{\text{daily}} = \mathbf{L} \mathbf{L}^T$, where $\mathbf{r}_{\text{sim}} = \boldsymbol{\mu}_{\text{daily}} + \mathbf{L} \mathbf{z}$ and $\mathbf{z} \sim \mathcal{N}(\mathbf{0}, \mathbf{I}_6)$.
+To evaluate potential return trajectories beyond the observed historical sample, a 10,000-draw Monte Carlo simulation was executed using the multivariate normal covariance structure of the six assets. Synthetic return vectors $\mathbf{r}_{\text{sim}} \in \mathbb{R}^6$ were generated as $\mathbf{r}_{\text{sim}} = \boldsymbol{\mu}_{\text{daily}} + \mathbf{V} \boldsymbol{\Lambda}^{1/2} \mathbf{z}$ with $\mathbf{z} \sim \mathcal{N}(\mathbf{0}, \mathbf{I}_6)$, where $\boldsymbol{\Sigma}_{\text{daily}} = \mathbf{V} \boldsymbol{\Lambda} \mathbf{V}^T$ is the eigen decomposition of the daily covariance matrix used by the \texttt{MASS::mvrnorm} implementation.
 
 Table~\ref{tab:mc_summary} reports the simulated Value at Risk and Expected Shortfall metrics across the 10,000 synthetic trading days.
 
 \input{tables/tbl_mc_summary.tex}
 
-The Monte Carlo simulation produces a 95 percent MC VaR of 1.35 percent and a 95 percent MC ES of 1.74 percent for the GMV portfolio. For the Maximum Sharpe portfolio, the simulated 95 percent MC VaR reaches 3.14 percent with an Expected Shortfall of 3.98 percent.
+The Monte Carlo simulation produces a 95 percent MC VaR of 2.02 percent and a 95 percent MC ES of 2.54 percent for the GMV portfolio. For the Maximum Sharpe portfolio, the simulated 95 percent MC VaR reaches 3.68 percent with an Expected Shortfall of 4.72 percent.
 
 Figure~\ref{fig:mc_distribution} displays the kernel density overlay comparing the empirical historical return distribution against the 10,000-draw Monte Carlo simulated distribution for the Maximum Sharpe portfolio.
 
@@ -102,8 +102,8 @@ Figure~\ref{fig:stress_test} illustrates the comparative drawdown impacts betwee
   \label{fig:stress_test}
 \end{figure}
 
-A granular economic analysis of Table~\ref{tab:stress_summary} and Figure~\ref{fig:stress_test} demonstrates the capital preservation properties of the GMV allocation during market dislocations. During the 2020 COVID-19 pandemic crash, the GMV portfolio limited capital loss to -13.82 percent, whereas the Maximum Sharpe portfolio suffered a steep -29.84 percent drawdown (2.16 times greater capital loss) due to synchronized global equity selling. During the 2022 Crypto Winter, the GMV portfolio declined by only -1.05 percent due to complete exclusion of digital assets, while the Maximum Sharpe portfolio lost -8.42 percent.
+A granular economic analysis of Table~\ref{tab:stress_summary} and Figure~\ref{fig:stress_test} demonstrates the capital preservation properties of the GMV allocation during market dislocations. During the 2020 COVID-19 pandemic crash, the GMV portfolio limited capital loss to -22.55 percent, whereas the Maximum Sharpe portfolio suffered a steep -28.83 percent drawdown (1.28 times greater capital loss) due to synchronized global equity and crypto selling. During the 2022 Crypto Winter, the GMV portfolio declined by -4.90 percent, while the Maximum Sharpe portfolio lost -14.40 percent.
 
-The 2022 Federal Reserve rate tightening shock further highlights the equity duration risk embedded in high-growth technology equities. Because growth equities derive a substantial portion of their valuation from distant future cash flows, rising discount rates compressed their present values, inflicting a -12.35 percent drawdown on the Maximum Sharpe portfolio compared to -4.12 percent for GMV. Similarly, during the broader tech valuation compression, the Maximum Sharpe portfolio fell -21.40 percent, while the GMV portfolio lost only -6.85 percent. Under the hypothetical 1.5x Black Swan shock, the GMV drawdown was contained at -20.73 percent, whereas the Maximum Sharpe portfolio suffered a severe -44.76 percent capital loss.
+The 2022 Federal Reserve rate tightening shock further highlights the equity duration risk embedded in high-growth technology equities. Because growth equities derive a substantial portion of their valuation from distant future cash flows, rising discount rates compressed their present values, inflicting a -18.65 percent drawdown on the Maximum Sharpe portfolio compared to -9.47 percent for GMV. Similarly, during the broader tech valuation compression, the Maximum Sharpe portfolio fell -24.58 percent, while the GMV portfolio gained 3.71 percent. Under the hypothetical 1.5x Black Swan shock, the GMV drawdown was contained at -35.89 percent, whereas the Maximum Sharpe portfolio suffered a severe -45.30 percent capital loss.
 
 These findings highlight the core trade-off governing quantitative portfolio construction. While the Maximum Sharpe allocation delivers superior wealth compounding during sustained economic expansions, the Global Minimum Variance allocation provides indispensable structural protection against systemic financial crises.

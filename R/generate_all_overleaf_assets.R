@@ -68,8 +68,6 @@ theme_quant <- function() {
     )
 }
 
-# --- GENERATE TABLES ---
-
 # Table 1: Data Acquisition Summary
 obs_counts <- sapply(asset_cols, function(a) sum(!is.na(raw_data[[a]])))
 summary_df <- data.frame(
@@ -98,8 +96,8 @@ writeLines(as.character(tex_t3), file.path(tables_dir, "tbl_correlation.tex"))
 
 # Portfolio Performance & Optimization Calculations
 w_eq <- rep(1/6, 6); names(w_eq) <- portfolio_assets
-port_bnh <- Return.portfolio(R = asset_returns_smp, weights = w_eq)
-port_reb <- Return.portfolio(R = asset_returns_smp, weights = w_eq, rebalance_on = "months")
+port_bnh <- Return.portfolio(R = asset_returns_smp, weights = w_eq, verbose = TRUE)
+port_reb <- Return.portfolio(R = asset_returns_smp, weights = w_eq, rebalance_on = "months", verbose = TRUE)
 
 eval_p <- function(r_s, name) {
   cum_r <- as.numeric(tail(cumprod(1 + r_s), 1)) - 1
@@ -168,7 +166,7 @@ risk_df <- data.frame(
   `99% CI`  = sprintf("%.2f%%", c(v_h_g99, v_p_g99, e_h_g99, e_p_g99, v_h_s99, v_p_s99, e_h_s99, e_p_s99)*100),
   check.names = FALSE
 )
-tex_t6 <- kbl(risk_df, format = "latex", booktabs = TRUE, caption = "Historical and Parametric VaR / CVaR Summary (Daily, 95% and 99% Confidence)", label = "var_summary") %>% kable_styling(latex_options = c("HOLD_position", "scale_down"), font_size = 9)
+tex_t6 <- kbl(risk_df, format = "latex", booktabs = TRUE, caption = "Historical and Parametric VaR / CVaR Summary (Daily, 95 percent and 99 percent Confidence)", label = "var_summary") %>% kable_styling(latex_options = c("HOLD_position", "scale_down"), font_size = 9)
 writeLines(as.character(tex_t6), file.path(tables_dir, "tbl_var_summary.tex"))
 
 # Monte Carlo Simulation Table
@@ -214,12 +212,12 @@ stress_df <- tibble(
 ) %>% rowwise() %>% mutate(
   GMV_Impact = sum(c(TEL,MER,AEV,NVDA,META,BTC) * w_gmv[c("TEL","MER","AEV","NVDA","META","BTC")]),
   MaxSharpe_Impact = sum(c(TEL,MER,AEV,NVDA,META,BTC) * w_sharpe[c("TEL","MER","AEV","NVDA","META","BTC")])
-) %>% ungroup() %>% select(Scenario, GMV_Impact, MaxSharpe_Impact)
+) %>% ungroup() %>% dplyr::select(Scenario, GMV_Impact, MaxSharpe_Impact)
 
 stress_tex_df <- stress_df %>% mutate(
   `GMV Portfolio Impact` = sprintf("%.2f%%", GMV_Impact * 100),
   `Max Sharpe Portfolio Impact` = sprintf("%.2f%%", MaxSharpe_Impact * 100)
-) %>% select(Scenario, `GMV Portfolio Impact`, `Max Sharpe Portfolio Impact`)
+) %>% dplyr::select(Scenario, `GMV Portfolio Impact`, `Max Sharpe Portfolio Impact`)
 
 tex_t8 <- kbl(stress_tex_df, format = "latex", booktabs = TRUE, caption = "Portfolio Impact Under Stress Scenarios", label = "stress_summary") %>% kable_styling(latex_options = c("HOLD_position"), font_size = 9)
 writeLines(as.character(tex_t8), file.path(tables_dir, "tbl_stress_summary.tex"))

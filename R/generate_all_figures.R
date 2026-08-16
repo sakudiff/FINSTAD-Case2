@@ -6,6 +6,7 @@ suppressPackageStartupMessages({
   library(xts)
   library(zoo)
   library(PerformanceAnalytics)
+  library(nloptr)
   library(quadprog)
   library(MASS)
   library(corrplot)
@@ -101,35 +102,33 @@ finite_grad <- function(w, func) {
   g
 }
 
-# QP Solver for GMV and Sharpe
-D <- 2 * Sigma_ann + diag(1e-6, n_a)
-d <- rep(0, n_a)
-Amat_gmv <- cbind(rep(1, n_a), diag(n_a))
-bvec_gmv <- c(1, rep(0, n_a))
-sol_gmv <- solve.QP(Dmat = D, dvec = d, Amat = Amat_gmv, bvec = bvec_gmv, meq = 1)
+# SLSQP solutions identical to the canonical QMD pipeline (nloptr)
+eval_f_v <- function(w) as.numeric(t(w) %*% Sigma_ann %*% w)
+eval_g_v <- function(w) nl.grad(w, eval_f_v)
+eval_f_s <- function(w) {
+  p_r <- sum(w * mu_ann)
+  p_sd <- sqrt(as.numeric(t(w) %*% Sigma_ann %*% w))
+  -(p_r - rf_annual) / p_sd
+}
+eval_g_s <- function(w) nl.grad(w, eval_f_s)
+eval_eq <- function(w) sum(w) - 1
+eval_jac <- function(w) nl.jacobian(w, eval_eq)
+opts <- list(algorithm = "NLOPT_LD_SLSQP", xtol_rel = 1e-8)
+
+sol_gmv <- nloptr(x0 = w0, eval_f = eval_f_v, eval_grad_f = eval_g_v,
+                  lb = rep(0, n_a), ub = rep(1, n_a),
+                  eval_g_eq = eval_eq, eval_jac_g_eq = eval_jac, opts = opts)
 w_gmv <- sol_gmv$solution; names(w_gmv) <- asset_names
 
-# Max Sharpe via grid sweep over frontier
-target_returns <- seq(min(mu_ann), max(mu_ann), length.out = 100)
-best_sharpe <- -Inf
-w_sharpe <- w0
+sol_shp <- nloptr(x0 = w0, eval_f = eval_f_s, eval_grad_f = eval_g_s,
+                  lb = rep(0, n_a), ub = rep(1, n_a),
+                  eval_g_eq = eval_eq, eval_jac_g_eq = eval_jac, opts = opts)
+w_sharpe <- sol_shp$solution; names(w_sharpe) <- asset_names
 
-for (target in target_returns) {
-  Amat <- cbind(rep(1, n_a), mu_ann, diag(n_a))
-  bvec <- c(1, target, rep(0, n_a))
-  sol <- tryCatch(solve.QP(Dmat = D, dvec = d, Amat = Amat, bvec = bvec, meq = 2), error = function(e) NULL)
-  if (!is.null(sol)) {
-    w_i <- sol$solution
-    r_i <- sum(w_i * mu_ann)
-    s_i <- sqrt(as.numeric(t(w_i) %*% Sigma_ann %*% w_i))
-    sh_i <- (r_i - rf_annual) / s_i
-    if (sh_i > best_sharpe) {
-      best_sharpe <- sh_i
-      w_sharpe <- w_i
-    }
-  }
-}
-names(w_sharpe) <- asset_names
+# QP setup reused for the frontier sweep below
+D <- 2 * Sigma_ann + diag(1e-6, n_a)
+d <- rep(0, n_a)
+target_returns <- seq(min(mu_ann), max(mu_ann), length.out = 100)
 
 gmv_ret <- sum(w_gmv * mu_ann); gmv_sd <- sqrt(as.numeric(t(w_gmv) %*% Sigma_ann %*% w_gmv))
 sharpe_ret <- sum(w_sharpe * mu_ann); sharpe_sd <- sqrt(as.numeric(t(w_sharpe) %*% Sigma_ann %*% w_sharpe))
