@@ -31,21 +31,21 @@ Group 3 Charlie evaluates the following seven asset classes over the sample peri
 
 ## Workspace Directory Layout
 
-- `data/` contains raw asset price CSV files and the compiled master dataset.
-- `R/` contains R script data acquisition pipelines and analytical routines.
-- `reports/finstad_analysis.qmd` is the sole canonical analysis document; it renders to `reports/finstad_analysis.pdf`.
+- `data/` contains the committed raw asset price CSV files and the compiled master dataset.
+- `reports/finstad_analysis.qmd` is the sole analytical implementation; it renders to `reports/finstad_analysis.pdf`.
 - `overleaf_project/` is the folder uploaded to the existing Overleaf project; it contains the manuscript tree (`main.tex`, `chapters/`, `tables/`, `figures/`, `references.bib`) and the compiled `main.pdf`.
+- `overleaf_project/appendix.pdf` is generated from `reports/finstad_analysis.qmd` and is intentionally not yet attached in `main.tex`, pending the groupmate's conclusion.
 - `guidelines.md` contains the formal assignment prompt and scoring rubric.
 
-## Data Acquisition and Running R Scripts
+## Reproducing the Analysis
 
-Execute the Python and R data scripts using `uv` or standard R environment.
+The committed datasets under `data/`, including the compiled `data/master_dataset.csv`, are the data source. `reports/finstad_analysis.qmd` is the sole analytical implementation: it loads the committed data, computes returns, generates the figures and tables, and renders to `reports/finstad_analysis.pdf` via Quarto. Render it from the repository root with:
 
 ```bash
-uv run --with yfinance --with pandas python3 R/fetch_data.py
+quarto render reports/finstad_analysis.qmd
 ```
 
-The script fetches historical daily prices for all seven tickers, aligns dates across trading calendars, attaches the risk free rate, and generates `data/master_dataset.csv`.
+The rendered figures and tables also support the raw Overleaf deliverable in `overleaf_project/`.
 
 ## Guide to Editing LaTeX Documents
 
@@ -195,7 +195,7 @@ For wide tables like correlation heatmaps or multi metric risk matrices, use the
 To embed R code in the appendix, use the `lstinputlisting` command or `listings` environment.
 
 ```latex
-\lstinputlisting[language=R, caption={Data Acquisition and Cleaning Script}]{../R/fetch_data.py}
+\lstinputlisting[language=R, caption={Appendix Pipeline Listing}]{../reports/finstad_analysis.qmd}
 ```
 
 ### References and Citations
