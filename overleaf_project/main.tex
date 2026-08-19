@@ -32,6 +32,8 @@
 \usepackage{csquotes}
 \usepackage[hidelinks]{hyperref}
 \usepackage{url}
+\usepackage{pdfpages}
+\usepackage{placeins}
 \usepackage[style=apa, backend=biber]{biblatex}
 \addbibresource{references.bib}
 
@@ -209,9 +211,18 @@
 \input{chapters/06_risk_assessment}
 \clearpage
 \input{chapters/07_recommendation}
+\clearpage
+\input{chapters/08_conclusion}
 
 \clearpage
 \nocite{*}
 \printbibliography[title={References}]
+
+\clearpage
+\FloatBarrier
+\appendix
+\section*{Appendix A: Analytical Pipeline and Full Results}
+\addcontentsline{toc}{section}{Appendix A: Analytical Pipeline and Full Results}
+\includepdf[pages=-,pagecommand=\thispagestyle{plain}]{appendix.pdf}
 
 \end{document}
