@@ -6,14 +6,18 @@
 .Rproj.user/
 *.Rproj
 
-# knitr / R Markdown output
+# knitr / Quarto render output
 *_cache/
 *_files/
 *.knit.md
 *.utf8.md
+.quarto/
+
+# Python
+__pycache__/
+*.pyc
 
 # Data files (track selectively)
-*.RData
 *.rds
 
 # OS
@@ -24,7 +28,7 @@ Thumbs.db
 .vscode/
 .idea/
 
-# Rendered output (keep source, not compiled)
+# LaTeX / rendered output (keep source, not compiled)
 *.log
 *.aux
 *.out
@@ -38,11 +42,14 @@ Thumbs.db
 *.run.xml
 *.toc
 reports/finstad_analysis.tex
-.pi-subagents
-R/__pycache__
-.Rprofile
-# Downloaded source archive and orchestration artifacts
-FINSTAD_Case_2 (OVERLEAD.zip
+
+# Downloaded source archives and orchestration artifacts
+*.zip
+FINSTAD_Case_2.zip
 taskflow.checkpoint.md
 taskflow.jsonl
 FINSTAD_Case2_Swarm_Audit_Checklist.md
+snowflake.log
+
+# Agent / tooling artifacts
+.pi-subagents

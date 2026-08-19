@@ -6,7 +6,7 @@ The construction of a quantitative multi asset portfolio requires empirical rigo
 
 The portfolio universe spans seven financial assets across four distinct asset classes, alongside the benchmark index and domestic risk free rate. The sampling horizon spans January 2, 2020 through December 31, 2025 (the six calendar years 2020--2025), yielding a master panel of 1,508 daily trading dates per asset.
 
-Raw asset prices were programmatically ingested via automated Python REST scripts leveraging the \texttt{yfinance} API \cite{yahoo_finance} for US-listed and cryptocurrency instruments. Philippine equities are sourced from the official PSE EDGE portal \cite{pse_edge} (MER, AEV), with PLDT represented via its NYSE-listed ADR, then converted to US dollars to preserve a single currency denomination across the portfolio.
+Raw asset prices were programmatically ingested via automated Python REST scripts leveraging the \texttt{yfinance} API \parencite{yahoo_finance} for US-listed and cryptocurrency instruments. Philippine equities are sourced from the official PSE EDGE portal \parencite{pse_edge} (MER, AEV), with PLDT represented via its NYSE-listed ADR, then converted to US dollars to preserve a single currency denomination across the portfolio.
 
 \begin{itemize}
   \item \textbf{PLDT Inc. (TEL):} Represented via its NYSE-traded ADR (PHI) as an accessible market-data proxy for TEL, with the US trading calendar and USD denomination as implications.
@@ -16,7 +16,7 @@ Raw asset prices were programmatically ingested via automated Python REST script
   \item \textbf{Meta Platforms, Inc. (META):} Ingested directly from NASDAQ exchange endpoints.
   \item \textbf{Bitcoin (BTC):} Ingested from global cryptocurrency spot market feeds as BTC-USD.
   \item \textbf{SPDR S\&P 500 ETF Trust (SPY):} Ingested from NYSE Arca as the benchmark ETF.
-  \item \textbf{Risk-Free Rate:} Annualized Philippine 91-Day Treasury Bill secondary market rate (5.25 percent benchmark) \cite{bsp_tbill}.
+  \item \textbf{Risk-Free Rate:} Annualized Philippine 91-Day Treasury Bill secondary market rate (5.25 percent benchmark) \parencite{bsp_tbill}.
 \end{itemize}
 
 Table~\ref{tab:data_summary} presents the complete data acquisition specifications, exchange mappings, observation counts, and sample horizons.
