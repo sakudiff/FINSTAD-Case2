@@ -203,6 +203,8 @@ The compiled `main.pdf` embeds Appendix A (the pipeline render) through the `pdf
 | SPY (S&P 500 ETF Trust) | Benchmark | NYSE Arca |
 | PH 91-Day T-Bill (5.25%) | Risk-free rate | BSP / BTr |
 
+All Philippine series were cross-validated against Bloomberg and LSEG Workspace, which returned the same prices and the same missing dates, since those vendors source Philippine equity data from the PSE.
+
 # Citation for This Project
 
 How to cite this archive in academic work.
